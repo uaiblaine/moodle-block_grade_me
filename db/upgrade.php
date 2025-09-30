@@ -109,7 +109,7 @@ function xmldb_block_grade_me_upgrade($oldversion, $block) {
         upgrade_block_savepoint(true, 2016120503, 'grade_me');
     }
 
-    if ($oldversion < 2024013100) {
+    if ($oldversion < 2025093000) {
         $table = new xmldb_table('block_grade_me');
 
         // Define key id (foreign) to be dropped form block_grade_me.
@@ -142,7 +142,7 @@ function xmldb_block_grade_me_upgrade($oldversion, $block) {
         $dbman->add_key($table, $key);
 
         // Grade_me savepoint reached.
-        upgrade_block_savepoint(true, 2024013100, 'grade_me');
+        upgrade_block_savepoint(true, 2025093000, 'grade_me');
     }
 
     return true;
