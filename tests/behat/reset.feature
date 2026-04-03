@@ -48,16 +48,9 @@ Feature: Reset task works.
           | Question name | Third question |
           | Question text | Third question |
           | Default mark  | 2.0 |
-        And I follow "My courses"
-        And I follow "Course 2"
-        And I turn editing mode on
-        And I add a "Assignment" to section "1" and I fill the form with:
-          | Assignment name | Assign |
-          | Description | Submit your online text |
-          | assignsubmission_onlinetext_enabled | 1 |
-          | assignsubmission_onlinetext_wordlimit_enabled | 1 |
-          | assignsubmission_onlinetext_wordlimit | 10 |
-          | assignsubmission_file_enabled | 0 |
+        And the following "activities" exist:
+          | activity | course | idnumber | name | intro                   | assignsubmission_onlinetext_enabled | assignsubmission_onlinetext_wordlimit_enabled | assignsubmission_onlinetext_wordlimit | assignsubmission_file_enabled |
+          | assign   | C2     | assign1  | Assign | Submit your online text | 1                                   | 1                                             | 10                                    | 0                             |
         And I log out
         # Submit the quiz as the first user.
         And I log in as "student1"

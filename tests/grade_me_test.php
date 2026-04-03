@@ -62,8 +62,9 @@ class grade_me_test extends \advanced_testcase {
 
         // Generate Data.
         $generator = $this->getDataGenerator();
-        $users = [$generator->create_user(), $generator->create_user()];
-        $courses = [$generator->create_course()];
+        $users = [];
+        $courses = [];
+        $plugins = [];
         $plugins = [];
         $excludes = [];
 
@@ -74,11 +75,17 @@ class grade_me_test extends \advanced_testcase {
                 $gradeablerows = $datasetrows[$gradeable];
                 for ($row = 0; $row < count($gradeablerows); $row += 1) {
                     $fields = $gradeablerows[$row];
+                    $xmlid = $fields['id'];
                     unset($fields['id']);
+                    
+                    if (!isset($courses[$fields['course']])) {
+                        $courses[$fields['course']] = $generator->create_course();
+                    }
+                    
                     $fields['course'] = $courses[$fields['course']]->id;
                     $instance = $pgen->create_instance($fields);
                     $context = context_module::instance($instance->cmid);
-                    $plugins[] = (object)['id' => $instance->id, 'cmid' => $instance->cmid, 'contextid' => $context->id];
+                    $plugins[$xmlid] = (object)['id' => $instance->id, 'cmid' => $instance->cmid, 'contextid' => $context->id];
                 }
             }
             $excludes[] = $gradeable;
@@ -173,8 +180,21 @@ class grade_me_test extends \advanced_testcase {
                     $tablerows = $datasetrows[$tablename];
                     for ($row = 0; $row < count($tablerows); $row += 1) {
                         $index = $tablerows[$row][$column];
+                        
+                        if ($list === 'users' && !isset($users[$index])) {
+                            $users[$index] = $generator->create_user();
+                        }
+                        if ($list === 'courses' && !isset($courses[$index])) {
+                            $courses[$index] = $generator->create_course();
+                        }
+                        
                         if (isset(${$list}[$index])) {
                             $datasetrows[$tablename][$row][$column] = ${$list}[$index]->$field;
+                        }
+                        
+                        // Fix for generic Moodle 5.1 PHP 8.2 Using null as array offset.
+                        if ($datasetrows[$tablename][$row][$column] === 'null' || $datasetrows[$tablename][$row][$column] === null) {
+                            $datasetrows[$tablename][$row][$column] = '';
                         }
                     }
                 }
@@ -188,12 +208,30 @@ class grade_me_test extends \advanced_testcase {
             }
         }
 
+        // Remove the gradeables that we manually instantiated via generators.
+        foreach ($excludes as $ex) {
+            unset($datasetrows[$ex]);
+        }
+
+        // Fix Moodle 5.1 dataset string 'null' parsing.
+        foreach (array_keys($datasetrows) as $tablename) {
+            foreach (array_keys($datasetrows[$tablename]) as $rowindex) {
+                foreach (array_keys($datasetrows[$tablename][$rowindex]) as $column) {
+                    $val = $datasetrows[$tablename][$rowindex][$column];
+                    if ($val === 'null' || $val === null) {
+                        $datasetrows[$tablename][$rowindex][$column] = '';
+                    }
+                }
+            }
+        }
+
         // Load back in the modified dataset and send to the db.
         $finaldataset = $this->dataset_from_array($datasetrows);
         $finaldataset->to_database();
 
         // Return the generated users and courses because the tests often need them for result calculations.
-        return [$users, $courses, $plugins];
+        // Re-index to consecutive keys to avoid breaking test methods that expect $users[0].
+        return [array_values($users), array_values($courses), array_values($plugins)];
     }
 
     /**
