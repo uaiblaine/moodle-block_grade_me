@@ -14,6 +14,17 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Data plugin file.
+ *
+ * @package    block_grade_me
+ */
+
+/**
+ * Required capabilities for the data plugin.
+ *
+ * @return array Array of required capability information.
+ */
 function block_grade_me_required_capability_data() {
     $enabledplugins['data'] = [
         'capability' => 'mod/data:rate',

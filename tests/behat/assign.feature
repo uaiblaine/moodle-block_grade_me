@@ -25,18 +25,9 @@ Feature: Assignments are displayed in the block
           | block_grade_me_enableadminviewall | 1 |
 
     Scenario: Assignments show up in the block
-      Given I log in as "teacher1"
-      And I follow "My courses"
-      And I follow "Course 1"
-      And I turn editing mode on
-      And I add a "Assignment" to section "1" and I fill the form with:
-        | Assignment name | Assign |
-        | Description | Submit your online text |
-        | assignsubmission_onlinetext_enabled | 1 |
-        | assignsubmission_onlinetext_wordlimit_enabled | 1 |
-        | assignsubmission_onlinetext_wordlimit | 10 |
-        | assignsubmission_file_enabled | 0 |
-      And I log out
+      Given the following "activities" exist:
+        | activity | name   | intro                   | course | idnumber | assignsubmission_onlinetext_enabled | assignsubmission_onlinetext_wordlimit_enabled | assignsubmission_onlinetext_wordlimit | assignsubmission_file_enabled |
+        | assign   | Assign | Submit your online text | C1     | assign1  | 1                                   | 1                                             | 10                                    | 0                             |
       # Now the students submit assignments.
       And I log in as "student1"
       And I follow "My courses"
@@ -119,19 +110,9 @@ Feature: Assignments are displayed in the block
       Then I should see "Nothing to grade!" in the "Grade Me" "block"
 
     Scenario: Assignments with scaler grades show up in the block
-      Given I log in as "teacher1"
-      And I follow "My courses"
-      And I follow "Course 1"
-      And I turn editing mode on
-      And I add a "Assignment" to section "1" and I fill the form with:
-        | Assignment name | Assign |
-        | Description | Submit your online text |
-        | assignsubmission_onlinetext_enabled | 1 |
-        | assignsubmission_onlinetext_wordlimit_enabled | 1 |
-        | assignsubmission_onlinetext_wordlimit | 10 |
-        | assignsubmission_file_enabled | 0 |
-        | grade[modgrade_type] | Scale |
-      And I log out
+      Given the following "activities" exist:
+        | activity | name   | intro                   | course | idnumber | assignsubmission_onlinetext_enabled | assignsubmission_onlinetext_wordlimit_enabled | assignsubmission_onlinetext_wordlimit | assignsubmission_file_enabled |
+        | assign   | Assign | Submit your online text | C1     | assign2  | 1                                   | 1                                             | 10                                    | 0                             |
       # Now the students submit assignments.
       And I log in as "student1"
       And I follow "My courses"

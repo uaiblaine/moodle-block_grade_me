@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Behat custom step definitions.
+ *
  * @package block_grade_me
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright 2016 onwards Remote-Learner Inc (http://www.remote-learner.net)
@@ -27,6 +29,8 @@ require_once(__DIR__ . '/../../../../lib/behat/behat_base.php');
  */
 class behat_block_grade_me extends behat_base {
     /**
+     * Set up the block on all pages.
+     *
      * @Given the grade me block is present on all pages.
      */
     public function the_grade_me_block_is_present_on_all_pages() {

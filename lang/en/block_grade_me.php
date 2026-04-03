@@ -14,6 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Grade Me block language strings.
+ *
+ * @package    block_grade_me
+ * @copyright  2026 block_grade_me contributors
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 $string['pluginname'] = 'Grade Me';
 $string['pluginname-reset'] = 'Grade Me - reset table';
 $string['title'] = 'Grade Me';

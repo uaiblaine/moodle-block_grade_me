@@ -15,8 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   block_grade_me
- * @copyright 2012 Dakota Duff
+ * Grade Me Block library functions.
+ *
+ * @package    block_grade_me
+ * @copyright  2026 block_grade_me contributors
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 /**
@@ -240,6 +243,10 @@ function block_grade_me_tree($course, array $usercache = []) {
     return $text;
 }
 // Reset table cron function.
+/**
+ * Reset block_grade_me cache variables and clear static flags.
+ * Used primarily for testing scopes or forced re-evaluations.
+ */
 function block_grade_me_cache_reset() {
     global $CFG, $DB;
     $DB->delete_records('block_grade_me');
@@ -248,6 +255,9 @@ function block_grade_me_cache_reset() {
     set_config('cachedatalast', time(), 'reset_block');
 }
 // Main cron function.
+/**
+ * Retrieve current grade data from the cache or pre-warm it for the current context.
+ */
 function block_grade_me_cache_grade_data() {
     global $CFG, $DB;
 

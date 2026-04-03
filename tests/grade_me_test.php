@@ -18,7 +18,6 @@
  * PHPUnit data generator tests
  *
  * @package    block_grade_me
- * @category   phpunit
  * @copyright  2013 Logan Reynolds {@link http://www.remote-learner.net}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -30,6 +29,8 @@ use block_grade_me;
 use context_module;
 use context_course;
 use stdClass;
+
+defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 require_once($CFG->dirroot . '/blocks/moodleblock.class.php');
@@ -498,7 +499,7 @@ class grade_me_test extends \advanced_testcase {
     /**
      * Data provider for the forum plugin.
      *
-     * @TODO Make this data provider less useless.
+     * @todo Make this data provider less useless.
      *
      * @return array Forum items
      */
@@ -790,7 +791,7 @@ class grade_me_test extends \advanced_testcase {
     /**
      * Provide input data to the parameters of the test_censusreport_null_grade_check() method.
      *
-     * @TODO See if this can be merged with provider_single_user
+     * @todo See if this can be merged with provider_single_user
      *
      * Test data is composed of:
      *     The plugin to be tested
@@ -831,7 +832,7 @@ class grade_me_test extends \advanced_testcase {
      * Test the function get_content.
      * Check that urls returned are what they should be
      *
-     * @TODO See if this plugin can be merged with test_block_grade_me_get_content_single_user
+     * @todo See if this plugin can be merged with test_block_grade_me_get_content_single_user
      *
      * @param string $plugin         The name of the plugin being tested
      * @param array  $expectedvalues An array of values that should be found in the grade_me block output

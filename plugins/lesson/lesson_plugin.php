@@ -15,6 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Lesson plugin file.
+ *
+ * @package    block_grade_me
  * Required capabilities for the lesson plugin.
  *
  * @return array Array of required capability information.
