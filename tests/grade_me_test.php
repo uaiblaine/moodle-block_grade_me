@@ -77,11 +77,11 @@ class grade_me_test extends \advanced_testcase {
                     $fields = $gradeablerows[$row];
                     $xmlid = $fields['id'];
                     unset($fields['id']);
-                    
+
                     if (!isset($courses[$fields['course']])) {
                         $courses[$fields['course']] = $generator->create_course();
                     }
-                    
+
                     $fields['course'] = $courses[$fields['course']]->id;
                     $instance = $pgen->create_instance($fields);
                     $context = context_module::instance($instance->cmid);
@@ -180,7 +180,7 @@ class grade_me_test extends \advanced_testcase {
                     $tablerows = $datasetrows[$tablename];
                     for ($row = 0; $row < count($tablerows); $row += 1) {
                         $index = $tablerows[$row][$column];
-                        
+
                         if ($list === 'users' && !isset($users[$index])) {
                             $users[$index] = $generator->create_user();
                         }
@@ -191,9 +191,10 @@ class grade_me_test extends \advanced_testcase {
                         if (isset(${$list}[$index])) {
                             $datasetrows[$tablename][$row][$column] = ${$list}[$index]->$field;
                         }
-                        
+
                         // Fix for generic Moodle 5.1 PHP 8.2 Using null as array offset.
-                        if ($datasetrows[$tablename][$row][$column] === 'null' || $datasetrows[$tablename][$row][$column] === null) {
+                        $value = $datasetrows[$tablename][$row][$column];
+                        if ($value === 'null' || $value === null) {
                             $datasetrows[$tablename][$row][$column] = '';
                         }
                     }

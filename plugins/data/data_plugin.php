@@ -18,6 +18,8 @@
  * Data plugin file.
  *
  * @package    block_grade_me
+ * @copyright  2024 block_grade_me contributors
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 /**

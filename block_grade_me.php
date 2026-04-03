@@ -26,7 +26,6 @@
  * Grade Me block definition.
  */
 class block_grade_me extends block_base {
-
     /**
      * Block initialization.
      */
@@ -90,7 +89,7 @@ class block_grade_me extends block_base {
 
             // Map each plugin to the userid column it filters on.
             // This is needed because each plugin's query references a different table alias.
-            $plugin_userid_columns = [
+            $pluginUseridColumns = [
                 'assign'   => 'asgn_sub.userid',
                 'quiz'     => 'bneeds.userid',
                 'forum'    => 'fp.userid',
@@ -103,7 +102,7 @@ class block_grade_me extends block_base {
 
             foreach ($enabledplugins as $plugin => $a) {
                 if (has_capability($a['capability'], $context)) {
-                    $useridcol = $plugin_userid_columns[$plugin] ?? 'userid';
+                    $useridcol = $pluginUseridColumns[$plugin] ?? 'userid';
                     [$usersql, $userparams] = \block_grade_me\db_helper::get_gradebook_users_sql(
                         $useridcol,
                         $courseid,

@@ -23,6 +23,8 @@
  */
 
 /**
+ * Get the assign module grading capability.
+ *
  * @return array Specifics on the capabilities of the assign plugin type
  */
 function block_grade_me_required_capability_assign() {
