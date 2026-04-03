@@ -198,10 +198,20 @@ function xmldb_block_grade_me_upgrade($oldversion, $block) {
     if ($oldversion < 2026040302) {
         // Clean up legacy 'itemid' column that might have been left behind
         // by the 2013 rename in some PostgreSQL distributions.
-        // Its presence breaks the optimized MERGE UPSERT constraints.
         $table = new xmldb_table('block_grade_me');
         $field = new xmldb_field('itemid');
         if ($dbman->field_exists($table, $field)) {
+            // Postgres requires dropping dependent indexes / keys first.
+            $key = new xmldb_key('itemid', XMLDB_KEY_FOREIGN, ['itemid'], 'grade_items', ['id']);
+            if ($dbman->key_exists($table, $key)) {
+                $dbman->drop_key($table, $key);
+            }
+
+            $index = new xmldb_index('itemid', XMLDB_INDEX_NOTUNIQUE, ['itemid']);
+            if ($dbman->index_exists($table, $index)) {
+                $dbman->drop_index($table, $index);
+            }
+
             $dbman->drop_field($table, $field);
         }
 
