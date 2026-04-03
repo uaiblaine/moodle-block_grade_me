@@ -27,6 +27,7 @@
         <INDEX NAME="itemsortorder" UNIQUE="false" FIELDS="itemsortorder" PREVIOUS="courseid-itemmodule"/>
         <INDEX NAME="itemmodule" UNIQUE="false" FIELDS="itemmodule"/>
         <INDEX NAME="iteminstance" UNIQUE="false" FIELDS="iteminstance"/>
+        <INDEX NAME="uq_course_module_instance_type" UNIQUE="true" FIELDS="courseid, itemmodule, iteminstance, itemtype"/>
 
       </INDEXES>
     </TABLE>
@@ -43,6 +44,10 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="userid-questionattemptstepid" />
         <INDEX NAME="userid-questionattemptstepid" UNIQUE="false" FIELDS="userid, questionattemptstepid"/>
       </KEYS>
+      <INDEXES>
+        <INDEX NAME="uq_attemptid_stepid" UNIQUE="true" FIELDS="attemptid, questionattemptstepid"/>
+        <INDEX NAME="idx_userid_quizid" UNIQUE="false" FIELDS="userid, quizid"/>
+      </INDEXES>
     </TABLE>
   </TABLES>
 </XMLDB>

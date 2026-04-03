@@ -31,27 +31,26 @@ function block_grade_me_required_capability_quiz() {
 }
 
 /**
- * Build SQL query for the quiz plugin
+ * Build SQL query for the quiz plugin.
  *
- * @param array $gradebookusers ID's of gradebook users
- * @return array|bool SQL query and parameters or false on failure
+ * @param string $usersql  SQL fragment for filtering users (e.g. "bneeds.userid IN (SELECT ...)")
+ * @param array  $userparams Named parameters for $usersql
+ * @return array|false SQL query and parameters, or false when $usersql is empty
  */
-function block_grade_me_query_quiz($gradebookusers) {
-    global $DB;
-
-    if (empty($gradebookusers)) {
+function block_grade_me_query_quiz(string $usersql, array $userparams) {
+    if (empty($usersql)) {
         return false;
     }
-    list($insql, $inparams) = $DB->get_in_or_equal($gradebookusers);
+
     $query = ", qas.id step_id, qza.userid, qza.timemodified timesubmitted, qza.id submissionid, qas.sequencenumber
         FROM {question_attempt_steps} qas
         JOIN {block_grade_me_quiz_ngrade} bneeds ON bneeds.questionattemptstepid = qas.id
-                                                    AND bneeds.userid $insql
+                                                    AND $usersql
         JOIN {quiz_attempts} qza ON qas.id = bneeds.questionattemptstepid
         JOIN {question_attempts} qna ON qna.questionusageid = qza.uniqueid
                                         AND qas.questionattemptid = qna.id
         JOIN {block_grade_me} bgm ON bgm.iteminstance = qza.quiz
                                      AND bgm.itemmodule = 'quiz'
        WHERE qas.state = '".question_state::$needsgrading."'";
-    return array($query, $inparams);
+    return array($query, $userparams);
 }

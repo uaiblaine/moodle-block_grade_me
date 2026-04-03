@@ -35,18 +35,16 @@ function block_grade_me_required_capability_assign() {
 }
 
 /**
- * Build SQL query for the assignment (assign) plugin for Moodle 22 and earlier
+ * Build SQL query for the assign plugin.
  *
- * @param array $gradebookusers ID's of gradebook users
- * @return mixed SQL query and parameters or false on failure
+ * @param string $usersql  SQL fragment for filtering users (e.g. "asgn_sub.userid IN (SELECT ...)")
+ * @param array  $userparams Named parameters for $usersql
+ * @return array|false SQL query and parameters, or false when $usersql is empty
  */
-function block_grade_me_query_assign($gradebookusers) {
-    global $DB;
-
-    if (empty($gradebookusers)) {
+function block_grade_me_query_assign(string $usersql, array $userparams) {
+    if (empty($usersql)) {
         return false;
     }
-    list($insql, $inparams) = $DB->get_in_or_equal($gradebookusers);
 
     $query = ", asgn_sub.id submissionid, asgn_sub.userid, asgn_sub.timemodified timesubmitted,
                 asgn_sub.attemptnumber, a.maxattempts
@@ -55,8 +53,14 @@ function block_grade_me_query_assign($gradebookusers) {
    LEFT JOIN {block_grade_me} bgm ON bgm.courseid = a.course AND bgm.iteminstance = a.id
    LEFT JOIN {assign_grades} ag ON ag.assignment = asgn_sub.assignment AND ag.userid = asgn_sub.userid AND
         asgn_sub.attemptnumber = ag.attemptnumber
-       WHERE asgn_sub.userid $insql AND asgn_sub.status = 'submitted' AND a.grade <> 0
-         AND (ag.id IS NULL OR asgn_sub.timemodified >= ag.timemodified)";
+       WHERE $usersql AND asgn_sub.status = 'submitted' AND a.grade <> 0
+         AND (ag.id IS NULL OR asgn_sub.timemodified >= ag.timemodified)
+         AND (a.maxattempts = 1 OR asgn_sub.attemptnumber = (
+             SELECT MAX(s2.attemptnumber)
+               FROM {assign_submission} s2
+              WHERE s2.assignment = asgn_sub.assignment
+                AND s2.userid = asgn_sub.userid
+         ))";
 
-    return array($query, $inparams);
+    return array($query, $userparams);
 }

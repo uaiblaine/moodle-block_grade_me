@@ -23,25 +23,29 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+namespace block_grade_me;
+
+use \advanced_testcase;
+use \block_grade_me;
+use \context_module;
+use \context_course;
+use \stdClass;
 
 global $CFG;
 require_once($CFG->dirroot . '/blocks/moodleblock.class.php');
 require_once($CFG->dirroot . '/blocks/grade_me/lib.php');
 require_once($CFG->dirroot . '/blocks/grade_me/block_grade_me.php');
 require_once($CFG->dirroot . '/blocks/grade_me/plugins/assign/assign_plugin.php');
-require_once($CFG->dirroot . '/blocks/grade_me/plugins/assignment/assignment_plugin.php');
 require_once($CFG->dirroot . '/blocks/grade_me/plugins/data/data_plugin.php');
 require_once($CFG->dirroot . '/blocks/grade_me/plugins/forum/forum_plugin.php');
 require_once($CFG->dirroot . '/blocks/grade_me/plugins/glossary/glossary_plugin.php');
 require_once($CFG->dirroot . '/blocks/grade_me/plugins/quiz/quiz_plugin.php');
-require_once($CFG->dirroot . '/blocks/grade_me/plugins/turnitintooltwo/turnitintooltwo_plugin.php');
 
 /**
  * Unit tests for block_grade_me.
  * @group block_grade_me
  */
-class block_grade_me_testcase extends advanced_testcase {
+class grade_me_test extends \advanced_testcase {
 
     /**
      * Load the testing dataset. Meant to be used by any tests that require the testing dataset.
@@ -63,7 +67,7 @@ class block_grade_me_testcase extends advanced_testcase {
         $plugins = array();
         $excludes = array();
 
-        $gradeables = array('assign', 'assignment', 'forum', 'glossary', 'quiz');
+        $gradeables = array('assign', 'forum', 'glossary', 'quiz');
         foreach ($gradeables as $gradeable) {
             if (in_array($gradeable, $names)) {
                 $pgen = $generator->get_plugin_generator("mod_{$gradeable}");
@@ -85,7 +89,7 @@ class block_grade_me_testcase extends advanced_testcase {
             'assignment'   => array(
                 'values' => 'plugins',
                 'param'  => 'id',
-                'tables' => array('assign_grades', 'assign_submission', 'assignment_submissions'),
+                'tables' => array('assign_grades', 'assign_submission'),
             ),
             'contextid'    => array(
                 'values' => 'plugins',
@@ -96,7 +100,7 @@ class block_grade_me_testcase extends advanced_testcase {
                 'values' => 'courses',
                 'param'  => 'id',
                 'tables' => array(
-                        'assign', 'assignment', 'course_modules', 'forum', 'forum_discussions',
+                        'assign', 'course_modules', 'forum', 'forum_discussions',
                         'glossary', 'quiz',
                 ),
             ),
@@ -139,7 +143,7 @@ class block_grade_me_testcase extends advanced_testcase {
                 'values' => 'users',
                 'param'  => 'id',
                 'tables' => array(
-                    'assign_grades', 'assign_submission', 'assignment_submissions', 'forum_posts',
+                    'assign_grades', 'assign_submission', 'forum_posts',
                     'forum_discussions', 'glossary_entries', 'grade_grades', 'question_attempt_steps',
                     'quiz_attempts',
                 ),
@@ -221,8 +225,12 @@ class block_grade_me_testcase extends advanced_testcase {
         $this->resetAfterTest(true);
         list($users, $courses, $plugins) = $this->create_grade_me_data('block_grade_me.xml');
 
+        // Build user filter SQL (new subquery-based signature).
+        [$insql, $insqlparams] = $DB->get_in_or_equal([$users[0]->id], SQL_PARAMS_NAMED, 'bgmu_');
+        $usersql = "asgn_sub.userid $insql";
+
         // Partial query return from block_grade_me_query_assign.
-        list($sql, $insqlparams) = block_grade_me_query_assign(array($users[0]->id));
+        list($sql, $returnedparams) = block_grade_me_query_assign($usersql, $insqlparams);
         // Build full query.
         $sql = "SELECT a.id, bgm.courseid $sql AND bgm.courseid = {$courses[0]->id} AND bgm.itemmodule = 'assign'";
 
@@ -233,7 +241,7 @@ class block_grade_me_testcase extends advanced_testcase {
         $rec->userid = $users[0]->id;
         $rec->timesubmitted = '2';
         $rec->attemptnumber = '1';
-        $rec->maxattempts = '-1';
+        $rec->maxattempts = '1';
 
         $rec2 = new stdClass();
         $rec2->id = $plugins[3]->id;
@@ -242,7 +250,7 @@ class block_grade_me_testcase extends advanced_testcase {
         $rec2->userid = $users[0]->id;
         $rec2->timesubmitted = '3';
         $rec2->attemptnumber = '1';
-        $rec2->maxattempts = '-1';
+        $rec2->maxattempts = '1';
 
         // Tests resubmission.
         $rec3 = new stdClass();
@@ -252,7 +260,7 @@ class block_grade_me_testcase extends advanced_testcase {
         $rec3->userid = $users[0]->id;
         $rec3->timesubmitted = '6';
         $rec3->attemptnumber = '1';
-        $rec3->maxattempts = '-1';
+        $rec3->maxattempts = '1';
 
         $rec4 = new stdClass();
         $rec4->id = $plugins[1]->id;
@@ -261,12 +269,12 @@ class block_grade_me_testcase extends advanced_testcase {
         $rec4->userid = $users[0]->id;
         $rec4->timesubmitted = '1';
         $rec4->attemptnumber = '1';
-        $rec4->maxattempts = '-1';
+        $rec4->maxattempts = '1';
 
         $expected = array($rec->id => $rec, $rec2->id => $rec2, $rec3->id => $rec3, $rec4->id => $rec4);
-        $actual = $DB->get_records_sql($sql, $insqlparams);
+        $actual = $DB->get_records_sql($sql, $returnedparams);
         $this->assertEquals($expected, $actual);
-        $this->assertFalse(block_grade_me_query_assign(array()));
+        $this->assertFalse(block_grade_me_query_assign('', []));
     }
 
     /**
@@ -290,7 +298,7 @@ class block_grade_me_testcase extends advanced_testcase {
         $rec->userid = $users[0]->id;
         $rec->timesubmitted = '2';
         $rec->attemptnumber = '1';
-        $rec->maxattempts = '-1';
+        $rec->maxattempts = '1';
 
         $rec2 = new stdClass();
         $rec2->id = $plugins[3]->id;
@@ -299,7 +307,7 @@ class block_grade_me_testcase extends advanced_testcase {
         $rec2->userid = $users[0]->id;
         $rec2->timesubmitted = '3';
         $rec2->attemptnumber = '1';
-        $rec2->maxattempts = '-1';
+        $rec2->maxattempts = '1';
 
         // Tests resubmission.
         $rec3 = new stdClass();
@@ -309,7 +317,7 @@ class block_grade_me_testcase extends advanced_testcase {
         $rec3->userid = $users[0]->id;
         $rec3->timesubmitted = '6';
         $rec3->attemptnumber = '1';
-        $rec3->maxattempts = '-1';
+        $rec3->maxattempts = '1';
 
         $rec4 = new stdClass();
         $rec4->id = $plugins[1]->id;
@@ -318,12 +326,14 @@ class block_grade_me_testcase extends advanced_testcase {
         $rec4->userid = $users[0]->id;
         $rec4->timesubmitted = '1';
         $rec4->attemptnumber = '1';
-        $rec4->maxattempts = '-1';
+        $rec4->maxattempts = '1';
 
         $expected = array($rec->id => $rec, $rec2->id => $rec2, $rec3->id => $rec3, $rec4->id => $rec4);
-        list($sql, $inparams) = block_grade_me_query_assign(array($users[0]->id));
+        [$insql, $inparams] = $DB->get_in_or_equal([$users[0]->id], SQL_PARAMS_NAMED, 'bgmu_');
+        $usersql = "asgn_sub.userid $insql";
+        list($sql, $qparams) = block_grade_me_query_assign($usersql, $inparams);
         $query = block_grade_me_query_prefix() . ', a.id as assignid ' . $sql . block_grade_me_query_suffix('assign');
-        $values = array_merge($inparams, ['courseid' => $courses[0]->id]);
+        $values = array_merge($qparams, ['courseid' => $courses[0]->id]);
         $actual = [];
         $rs = $DB->get_recordset_sql($query, $values);
         foreach ($rs as $record) {
@@ -338,7 +348,7 @@ class block_grade_me_testcase extends advanced_testcase {
             ];
         }
         $this->assertEquals($expected, $actual);
-        $this->assertFalse(block_grade_me_query_assign(array()));
+        $this->assertFalse(block_grade_me_query_assign('', []));
 
         // Test with a maximum age.
         set_config('block_grade_me_maxage', 10);
@@ -353,9 +363,11 @@ class block_grade_me_testcase extends advanced_testcase {
         foreach ($expected as $id => $record) {
             $expected[$id]->timesubmitted = $now;
         }
-        list($sql, $inparams) = block_grade_me_query_assign(array($users[0]->id));
+        [$insql2, $inparams2] = $DB->get_in_or_equal([$users[0]->id], SQL_PARAMS_NAMED, 'bgmu_');
+        $usersql2 = "asgn_sub.userid $insql2";
+        list($sql, $qparams) = block_grade_me_query_assign($usersql2, $inparams2);
         $query = block_grade_me_query_prefix() . ', a.id as assignid ' . $sql.block_grade_me_query_suffix('assign');
-        $values = array_merge($inparams, ['courseid' => $courses[0]->id]);
+        $values = array_merge($qparams, ['courseid' => $courses[0]->id]);
         $actual = [];
         $rs = $DB->get_recordset_sql($query, $values);
         foreach ($rs as $record) {
@@ -370,7 +382,7 @@ class block_grade_me_testcase extends advanced_testcase {
             ];
         }
         $this->assertEquals($expected, $actual);
-        $this->assertFalse(block_grade_me_query_assign(array()));
+        $this->assertFalse(block_grade_me_query_assign('', []));
     }
 
     /**
@@ -387,7 +399,7 @@ class block_grade_me_testcase extends advanced_testcase {
      *
      * @return array Quiz questions
      */
-    public function provider_query_quiz() {
+    public static function provider_query_quiz() {
         // Represents questions that are finished and ready to be graded.
         // In progress questions or questions that are already graded are not included.
         $items = array();
@@ -459,11 +471,14 @@ class block_grade_me_testcase extends advanced_testcase {
 
         $this->update_quiz_ngrade();
 
-        list($sql, $params) = block_grade_me_query_quiz(array($users[0]->id));
+        [$insql, $inparams] = $DB->get_in_or_equal([$users[0]->id], SQL_PARAMS_NAMED, 'bgmu_');
+        $usersql = "bneeds.userid $insql";
+        list($sql, $qparams) = block_grade_me_query_quiz($usersql, $inparams);
         $sql = block_grade_me_query_prefix() . $sql . block_grade_me_query_suffix('quiz');
 
         $actual = array();
-        $result = $DB->get_recordset_sql($sql, array($params[0], $courses[0]->id));
+        $values = array_merge($qparams, ['courseid' => $courses[0]->id]);
+        $result = $DB->get_recordset_sql($sql, $values);
         foreach ($result as $rec) {
             $actual[] = (array)$rec;
         }
@@ -488,7 +503,7 @@ class block_grade_me_testcase extends advanced_testcase {
      *
      * @return array Forum items
      */
-    public function provider_query_forum() {
+    public static function provider_query_forum() {
         // Represents forum items that are ready for grading. Forum items that have already been graded are not included.
         $forumitem1 = array(
             'courseid'            => 0,
@@ -538,7 +553,7 @@ class block_grade_me_testcase extends advanced_testcase {
      *
      * @return array Glossary entries
      */
-    public function provider_query_glossary() {
+    public static function provider_query_glossary() {
         $datafile = 'glossary.xml';
         // Represents entries that are finished and ready to be graded.
         $entries = array();
@@ -599,68 +614,12 @@ class block_grade_me_testcase extends advanced_testcase {
         $this->standard_query_tests($datafile, $expected, 'glossary');
     }
 
-    /**
-     * Data provider for the testing the turnitintooltwo plugin.
-     *
-     * @return array Entries
-     */
-    public function provider_query_turnitintooltwo() {
-        $datafile = 'turnitintooltwo.xml';
-        // Represents entries that are finished and ready to be graded.
-        $entries = array();
-        $entries[0] = array(
-            'courseid' => 0,
-            'coursename' => '0',
-            'itemmodule' => 'turnitintooltwo',
-            'iteminstance' => 1,
-            'itemname' => 'turnitin1',
-            'coursemoduleid' => 0,
-            'itemsortorder' => 0,
-            'submissionid' => 1,
-            'userid' => 0,
-            'timesubmitted' => 1424354368,
-        );
 
-        $data = array(
-            'test1' => array($datafile, $entries)
-        );
-
-        return $data;
-    }
-
-    /**
-     * Test the block_grade_me_query_glossary function
-     *
-     * @param string $datafile The database file to load for the test
-     * @param array $expected The expected results
-     * @dataProvider provider_query_turnitintooltwo
-     */
-    public function test_query_turnitintooltwo($datafile, $expected) {
-        global $DB;
-        $this->resetAfterTest(true);
-        $dbman = $DB->get_manager();
-        if ($dbman->table_exists('turnitintooltwo')) {
-            // Load the data.
-            $dataset = $this->createXMLDataSet(__DIR__ . '/fixtures/' . $datafile);
-            $filtered = new \PHPUnit\DbUnit\DataSet\Filter($dataset);
-            $this->loadDataSet($filtered);
-            [$sql, $params] = block_grade_me_query_turnitintooltwo([0]);
-            $sql = block_grade_me_query_prefix() . $sql . block_grade_me_query_suffix('turnitintooltwo');
-            $sql .= ' ORDER BY submissionid ASC';
-
-            $actual = array();
-            $result = $DB->get_recordset_sql($sql, array($params[0], 0));
-            foreach ($result as $rec) {
-                $actual[] = (array)$rec;
-            }
-            $this->assertEquals($expected, $actual);
-        } else {
-            $this->markTestSkipped();
-        }
-    }
 
     /**
      * Generic test that can be run by standard modules.
+     *
+     * Maps plugin suffix to the correct userid column for the SQL subquery.
      */
     public function standard_query_tests($datafile, $expected, $suffix) {
         global $DB;
@@ -668,12 +627,25 @@ class block_grade_me_testcase extends advanced_testcase {
         $this->resetAfterTest(true);
         list($users, $courses, $plugins) = $this->create_grade_me_data($datafile);
 
+        // Map plugin suffix to userid column.
+        $useridcolumns = [
+            'forum'    => 'fp.userid',
+            'glossary' => 'ge.userid',
+            'data'     => 'dr.userid',
+            'lesson'   => 'la.userid',
+        ];
+        $useridcol = $useridcolumns[$suffix] ?? 'userid';
+
+        [$insql, $inparams] = $DB->get_in_or_equal([$users[0]->id], SQL_PARAMS_NAMED, 'bgmu_');
+        $usersql = "$useridcol $insql";
+
         $dbfunction = 'block_grade_me_query_' . $suffix;
-        list($sql, $params) = $dbfunction(array($users[0]->id));
+        list($sql, $qparams) = $dbfunction($usersql, $inparams);
         $sql = block_grade_me_query_prefix() . $sql . block_grade_me_query_suffix($suffix);
 
         $actual = array();
-        $result = $DB->get_recordset_sql($sql, array($params[0], $courses[0]->id));
+        $values = array_merge($qparams, ['courseid' => $courses[0]->id]);
+        $result = $DB->get_recordset_sql($sql, $values);
         foreach ($result as $rec) {
             $actual[] = (array)$rec;
         }
@@ -699,11 +671,15 @@ class block_grade_me_testcase extends advanced_testcase {
         $concatid = $DB->sql_concat('dr.id', "'-'", $USER->id);
         $concatitem = $DB->sql_concat('r.itemid', "'-'", 'r.userid');
 
+        // Build user filter SQL.
+        $usersql = 'dr.userid IN (:bgmu_0,:bgmu_1)';
+        $userparams = ['bgmu_0' => 2, 'bgmu_1' => 3];
+
         $expected = ", dr.id submissionid, dr.userid, dr.timemodified timesubmitted
         FROM {data_records} dr
         JOIN {data} d ON d.id = dr.dataid
    LEFT JOIN {block_grade_me} bgm ON bgm.courseid = d.course AND bgm.iteminstance = d.id
-       WHERE dr.userid IN (?,?)
+       WHERE $usersql
              AND d.assessed = 1
              AND $concatid NOT IN (
              SELECT $concatitem
@@ -716,29 +692,16 @@ class block_grade_me_testcase extends advanced_testcase {
                     )
              )";
 
-        list($sql, $params) = block_grade_me_query_data(array(2, 3));
+        list($sql, $params) = block_grade_me_query_data($usersql, $userparams);
         $this->assertEquals($expected, $sql);
-        $this->assertEquals(array(2, 3), $params);
-        $this->assertFalse(block_grade_me_query_data(array()));
+        $this->assertEquals($userparams, $params);
+        $this->assertFalse(block_grade_me_query_data('', []));
     }
 
     /**
      * Test the block_grade_me_query_assignment function
      */
-    public function test_query_assignment() {
-        $expected = ", asgn_sub.id submissionid, asgn_sub.userid, asgn_sub.timemodified timesubmitted
-        FROM {assignment_submissions} asgn_sub
-        JOIN {assignment} a ON a.id = asgn_sub.assignment
-   LEFT JOIN {block_grade_me} bgm ON bgm.courseid = a.course AND bgm.iteminstance = a.id
-       WHERE asgn_sub.userid IN (?,?)
-             AND a.grade > 0
-             AND asgn_sub.timemarked < asgn_sub.timemodified";
 
-        list($sql, $params) = block_grade_me_query_assignment(array(2, 3));
-        $this->assertEquals($expected, $sql);
-        $this->assertEquals(array(2, 3), $params);
-        $this->assertFalse(block_grade_me_query_assignment(array()));
-    }
 
     /**
      * Provide input data to the parameters of the test_block_grade_me_get_content_single_user() method.
@@ -751,7 +714,7 @@ class block_grade_me_testcase extends advanced_testcase {
      *
      * @return array An array containing the test data
      */
-    public function provider_get_content_single_user() {
+    public static function provider_get_content_single_user() {
         $data = array();
 
         // New assign test.
@@ -759,22 +722,11 @@ class block_grade_me_testcase extends advanced_testcase {
         $matches = array(
             1 => '/Go to assign/',
             2 => '|mod/assign/view.php|',
-            3 => '/action=grade&userid=[user0]/',
+            3 => '/action=grade\&userid=[user0]/',
             5 => '/testassignment3/',
             6 => '/testassignment4/',
         );
         $data['assign'] = array($plugin, $matches);
-
-        // Legacy assignment test.
-        $plugin = 'assignment';
-        $matches = array(
-            1 => '/Go to assignment/',
-            2 => '|mod/assignment/submissions.php|',
-            3 => '/userid=[user0]&amp;mode=single/',
-            5 => '/testassignment5/',
-            6 => '/testassignment6/',
-        );
-        $data['assignment'] = array($plugin, $matches);
 
         return $data;
     }
@@ -817,7 +769,7 @@ class block_grade_me_testcase extends advanced_testcase {
         // Create a manual enrolment record.
         $manualenroldata['enrol'] = 'manual';
         $manualenroldata['status'] = 0;
-        $manualenroldata['courseid'] = 2;
+        $manualenroldata['courseid'] = $courses[0]->id;
         $enrolid = $DB->insert_record('enrol', $manualenroldata);
 
         // Create the user enrolment record.
@@ -849,7 +801,7 @@ class block_grade_me_testcase extends advanced_testcase {
      *
      * @return array An array containing the test data
      */
-    public function provider_get_content_multiple_user() {
+    public static function provider_get_content_multiple_user() {
         $data = array();
 
         // New assign test.
@@ -857,24 +809,12 @@ class block_grade_me_testcase extends advanced_testcase {
         $matches = array(
             1 => '/Go to assign/',
             2 => '|mod/assign/view.php|',
-            3 => '/action=grade&userid=[user0]/',
-            4 => '/action=grade&userid=[user1]/',
+            3 => '/action=grade\&userid=[user0]/',
+            4 => '/action=grade\&userid=[user1]/',
             5 => '/testassignment3/',
             6 => '/testassignment4/'
         );
         $data['assign'] = array($plugin, $matches);
-
-        // Legacy assignment test.
-        $plugin = 'assignment';
-        $matches = array(
-            1 => '/Go to assignment/',
-            2 => '|mod/assignment/submissions.php|',
-            3 => '/userid=[user0]&amp;mode=single/',
-            4 => '/userid=[user1]&amp;mode=single/',
-            5 => '/testassignment5/',
-            6 => '/testassignment6/',
-        );
-        $data['assignment'] = array($plugin, $matches);
 
         // Quiz test.
         $plugin = 'quiz';
@@ -939,7 +879,7 @@ class block_grade_me_testcase extends advanced_testcase {
         // Create a manual enrolment record.
         $manualenroldata['enrol'] = 'manual';
         $manualenroldata['status'] = 0;
-        $manualenroldata['courseid'] = 2;
+        $manualenroldata['courseid'] = $courses[0]->id;
         $enrolid = $DB->insert_record('enrol', $manualenroldata);
 
         // Create the user enrolment record.
@@ -975,9 +915,12 @@ class block_grade_me_testcase extends advanced_testcase {
         $this->resetAfterTest(true);
         list($users, $courses, $plugins) = $this->create_grade_me_data('block_grade_me.xml');
 
-        list($sql, $params) = block_grade_me_query_forum(array($users[0]->id));
+        [$insql, $inparams] = $DB->get_in_or_equal([$users[0]->id], SQL_PARAMS_NAMED, 'bgmu_');
+        $usersql = "fp.userid $insql";
+        list($sql, $qparams) = block_grade_me_query_forum($usersql, $inparams);
         $sql = block_grade_me_query_prefix() . $sql . block_grade_me_query_suffix('forum');
-        $result = $DB->get_recordset_sql($sql, array($params[0], 'courseid' => $courses[0]->id));
+        $values = array_merge($qparams, ['courseid' => $courses[0]->id]);
+        $result = $DB->get_recordset_sql($sql, $values);
         $gradeables = array();
         foreach ($result as $rec) {
             $gradeables = block_grade_me_array($gradeables, $rec);

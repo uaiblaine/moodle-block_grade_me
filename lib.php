@@ -51,7 +51,7 @@ function block_grade_me_query_prefix() {
  * @return string $string
  */
 function block_grade_me_query_suffix($mod) {
-    $query = " AND bgm.courseid = ? AND bgm.itemmodule = '$mod') allitems";
+    $query = " AND bgm.courseid = :courseid AND bgm.itemmodule = '$mod') allitems";
     $maxage = get_config(null, 'block_grade_me_maxage');
     if (!empty($maxage) && is_numeric($maxage)) {
         $maxtimesubmitted = time() - ((int)$maxage * DAYSECS);
@@ -108,9 +108,10 @@ function block_grade_me_array($gradeables, $r) {
 /**
  * Construct the tree of ungraded items
  * @param array $course The array of ungraded items for a specific course
+ * @param array $usercache Preloaded user records keyed by userid (optional, for batch loading)
  * @return string $text
  */
-function block_grade_me_tree($course) {
+function block_grade_me_tree($course, array $usercache = []) {
     global $CFG, $DB, $OUTPUT, $SESSION;
 
     // Get time format string.
@@ -151,9 +152,7 @@ function block_grade_me_tree($course) {
 
         $modulelink = $CFG->wwwroot . '/mod/' . $itemmodule . '/view.php?id=' . $coursemoduleid;
         $gradelink = $CFG->wwwroot;
-        if ($itemmodule == 'assignment') {
-            $gradelink .= '/mod/assignment/submissions.php?id=' . $coursemoduleid;
-        } else if ($itemmodule == 'quiz') {
+        if ($itemmodule == 'quiz') {
             $gradelink .= '/mod/quiz/report.php?id=' . $coursemoduleid;
         } else {
             $gradelink = $modulelink;
@@ -184,10 +183,7 @@ function block_grade_me_tree($course) {
             $submissionid = $submission['meta']['submissionid'];
 
             $submissionlink = $CFG->wwwroot;
-            if ($itemmodule == 'assignment') {
-                $submissionlink .= '/mod/assignment/submissions.php?id=' . $coursemoduleid . '&amp;userid=' . $userid .
-                    '&amp;mode=single&amp;filter=0&amp;offset=0';
-            } else if ($itemmodule == 'assign') {
+            if ($itemmodule == 'assign') {
                 $submissionlink .= "/mod/assign/view.php?id=$coursemoduleid&action=grade&userid=$userid";
             } else if ($itemmodule == 'data') {
                 $submissionlink .= '/mod/data/view.php?rid=' . $submissionid . '&amp;mode=single';
@@ -208,7 +204,13 @@ function block_grade_me_tree($course) {
             $submissiontitle = get_string('link_grade_img', 'block_grade_me', array());
             $altmark = get_string('alt_mark', 'block_grade_me', array());
 
-            $user = $DB->get_record('user', array('id' => $userid));
+            // Use preloaded user cache instead of per-submission DB query.
+            if (isset($usercache[$userid])) {
+                $user = $usercache[$userid];
+            } else {
+                // Fallback for safety (e.g. direct calls without cache).
+                $user = $DB->get_record('user', array('id' => $userid));
+            }
 
             $userfirst = $user->firstname;
             $userfirstlast = $user->firstname . ' ' . $user->lastname;
@@ -248,186 +250,130 @@ function block_grade_me_cache_reset() {
 // Main cron function.
 function block_grade_me_cache_grade_data() {
     global $CFG, $DB;
+
     $lastrun = $DB->get_field('task_scheduled', 'lastruntime', array('classname' => 'cache_grade_data'));
-    $params = array();
-    $params['itemtype'] = 'mod';
     $enabledplugins = array_keys(block_grade_me_enabled_plugins());
-    // Get the id for each plugin name.
-    $enabledpluginsid = array();
-    foreach ($enabledplugins as $plugin) {
-        $enabledpluginsid[] = $DB->get_field('modules', 'id', array('name' => $plugin));
+
+    if (empty($enabledplugins)) {
+        set_config('cachedatalast', time(), 'block_grade_me');
+        return true;
     }
-    $timedif = time() - $lastrun;
+
+    // Get module IDs for enabled plugins in a single query.
+    [$pluginsql, $pluginparams] = $DB->get_in_or_equal($enabledplugins, SQL_PARAMS_NAMED, 'plug_');
+    $enabledpluginsid = $DB->get_fieldset_sql(
+        "SELECT id FROM {modules} WHERE name {$pluginsql}",
+        $pluginparams
+    );
+
+    if (empty($enabledpluginsid)) {
+        set_config('cachedatalast', time(), 'block_grade_me');
+        return true;
+    }
+
     // Check the size of the grade me table. If its 0, then ignore time stamp.
     $tablesize = $DB->count_records('block_grade_me');
-    if ($tablesize == '0') {
-        $lastrun = '0';
+    if ($tablesize == 0) {
+        $lastrun = 0;
     }
 
     // See if the block has been added course wide.
-    $paramsystem = array('site-index', 'my-index', '*');
-    $sqlsystem = "SELECT count(b.id) bcount
-                   FROM {block_instances} b
-                   WHERE b.blockname = 'grade_me'
-                  AND (b.pagetypepattern = ? or b.pagetypepattern = ?
-                       or b.pagetypepattern = ?)";
-    $systemblock = $DB->get_record_sql($sqlsystem, $paramsystem);
-    $systemcount = $systemblock->bcount;
+    $systemcount = $DB->count_records_sql(
+        "SELECT COUNT(b.id)
+           FROM {block_instances} b
+          WHERE b.blockname = 'grade_me'
+            AND b.pagetypepattern IN (:p1, :p2, :p3)",
+        ['p1' => 'site-index', 'p2' => 'my-index', 'p3' => '*']
+    );
 
-    // Get the list of all active courses in the database.
-    $paramscourse = array();
-    if ($systemcount > '0') {
-        $sqlactive = "SELECT c.id, c.timemodified
-                       FROM {course} c";
+    // Get the list of all active courses that have enrolled users.
+    // This eliminates the N+1 per-course validation query.
+    if ($systemcount > 0) {
+        $sqlactive = "SELECT DISTINCT c.id, c.timemodified
+                       FROM {course} c
+                       JOIN {enrol} e ON e.courseid = c.id
+                       JOIN {user_enrolments} ue ON ue.enrolid = e.id
+                       JOIN {user} u ON u.id = ue.userid AND u.deleted = 0";
     } else {
-        $sqlactive = "SELECT c.id, c.timemodified
+        $sqlactive = "SELECT DISTINCT c.id, c.timemodified
                        FROM {course} c
                        JOIN {context} x ON c.id = x.instanceid
                        JOIN {block_instances} b
-                         ON (b.parentcontextid = x.id
-                             AND b.blockname = 'grade_me')";
+                         ON (b.parentcontextid = x.id AND b.blockname = 'grade_me')
+                       JOIN {enrol} e ON e.courseid = c.id
+                       JOIN {user_enrolments} ue ON ue.enrolid = e.id
+                       JOIN {user} u ON u.id = ue.userid AND u.deleted = 0";
     }
 
     // Determine whether to show hidden courses based on config setting.
     if (false == get_config(null, 'block_grade_me_enableshowhidden')) {
-        $sqlactive .= " WHERE c.visible = '1'";
+        $sqlactive .= " WHERE c.visible = 1";
     }
 
-    $courselist = $DB->get_recordset_sql($sqlactive, $paramscourse);
+    $courselist = $DB->get_recordset_sql($sqlactive, []);
     foreach ($courselist as $actcourse) {
         $cid = $actcourse->id;
         $coursemod = $actcourse->timemodified;
-        if ($lastrun == '0') {
-            $coursemod = '0';
+        if ($lastrun == 0) {
+            $coursemod = 0;
         } else {
             if ($coursemod > $lastrun) {
                 // This handles the case if the course was hidden and made visible.
-                $coursemod = '0';
+                $coursemod = 0;
             } else {
                 $coursemod = $lastrun;
             }
         }
-        // Validate the course has active users.
-        $sqlcourse = "SELECT count(enrol.id)
-                        FROM {user_enrolments} enrol
-                   LEFT JOIN {user} u ON enrol.userid = u.id
-                   LEFT JOIN {enrol} en ON enrol.enrolid = en.id
-                       WHERE en.courseid = ?
-                         AND u.deleted = 0";
-        $validcourse = $DB->count_records_sql($sqlcourse, array('courseid' => $cid));
-        if ($validcourse > '0') {
-            $paramscourse = array();
-            $paramscourse['itemtype'] = 'mod';
 
-            $paramscourse['id'] = $cid;
-            $paramscourse['timemodified'] = $coursemod;
-            list($insql, $inparams) = $DB->get_in_or_equal($enabledpluginsid);
-            $sql = "SELECT gi.id itemid, gi.itemname itemname, gi.itemtype itemtype,
-                           gi.itemmodule itemmodule, gi.iteminstance iteminstance,
-                           gi.sortorder itemsortorder, c.id courseid, c.shortname coursename,
-                           cm.id coursemoduleid
-                    FROM {grade_items} gi
-               LEFT JOIN {course} c ON gi.courseid = c.id
-               LEFT JOIN {modules} m ON m.name = gi.itemmodule
-                    JOIN {course_modules} cm ON cm.course = c.id AND cm.module = m.id AND cm.instance = gi.iteminstance
-                    WHERE gi.itemtype = ?
-                          AND c.id = ?
-                          AND gi.timemodified > ?
-                          AND m.id $insql";
-            $paramscourse = array_merge($paramscourse, $inparams);
-            $rs = $DB->get_recordset_sql($sql, $paramscourse);
-            foreach ($rs as $rec) {
-                $values = array(
-                    'itemtype'      => $rec->itemtype,
-                    'itemmodule'    => $rec->itemmodule,
-                    'iteminstance'  => $rec->iteminstance,
-                    'courseid'      => $rec->courseid
-                );
-                $fragment = 'itemtype = :itemtype AND itemmodule = :itemmodule AND ' .
-                            'iteminstance = :iteminstance AND courseid = :courseid';
-                $params = array(
-                    'itemname' => $rec->itemname,
-                    'itemtype' => $rec->itemtype,
-                    'itemmodule' => $rec->itemmodule,
-                    'iteminstance' => $rec->iteminstance,
-                    'itemsortorder' => $rec->itemsortorder,
-                    'courseid' => $rec->courseid,
-                    'coursename' => $rec->coursename,
-                    'coursemoduleid' => $rec->coursemoduleid,
-                 );
+        // Build the grade items query for this course with named params.
+        [$modinsql, $modinparams] = $DB->get_in_or_equal($enabledpluginsid, SQL_PARAMS_NAMED, 'mod_');
 
-                // Note: We use get_fieldset_select because duplicates may already exist.
+        $sql = "SELECT gi.id itemid, gi.itemname itemname, gi.itemtype itemtype,
+                       gi.itemmodule itemmodule, gi.iteminstance iteminstance,
+                       gi.sortorder itemsortorder, c.id courseid, c.shortname coursename,
+                       cm.id coursemoduleid
+                FROM {grade_items} gi
+           LEFT JOIN {course} c ON gi.courseid = c.id
+           LEFT JOIN {modules} m ON m.name = gi.itemmodule
+                JOIN {course_modules} cm ON cm.course = c.id AND cm.module = m.id AND cm.instance = gi.iteminstance
+                WHERE gi.itemtype = :itemtype
+                      AND c.id = :cid
+                      AND gi.timemodified > :timemod
+                      AND m.id {$modinsql}";
 
-                $ids = $DB->get_fieldset_select('block_grade_me', 'id', $fragment, $values);
-                if (empty($ids)) {
-                    $DB->insert_record('block_grade_me', $params);
-                } else {
-                    $params['id'] = reset($ids);
-                    $DB->update_record('block_grade_me', $params);
-                }
-            }
-            //
-            // Build the quiz table per course. Cannot do this in bulk
-            // because temp tables can cause large disk usage.
-            // First get the list of quiz attempts for a course with manualgraded questions,
-            // and that have active students in them.
-            //
+        $giparams = array_merge([
+            'itemtype' => 'mod',
+            'cid'      => $cid,
+            'timemod'  => $coursemod,
+        ], $modinparams);
 
-            $sqlquizlist = "SELECT mq.id quizid, mqa.id quiattemptid, mqa.userid, mq.course, mqa.uniqueid,
-                            qna.id questionattemptid
-                            FROM {quiz} mq
-                            JOIN {quiz_attempts} mqa ON mqa.quiz = mq.id
-                            JOIN {question_attempts} qna ON qna.questionusageid = mqa.uniqueid
-                            JOIN {user} mu  ON mu.id = mqa.userid
-                            WHERE course = ?
-                            AND behaviour = 'manualgraded'
-                            AND mu.deleted = 0";
-            $paramsquiz = array($cid);
-            $rsq = $DB->get_recordset_sql($sqlquizlist, $paramsquiz);
-            foreach ($rsq as $recattempt) {
-                $questionattemptid = $recattempt->questionattemptid;
-                $sqlcount = "SELECT count(sequencenumber) mseq
-                             FROM {question_attempt_steps}
-                             WHERE questionattemptid = ? and state ='needsgrading'";
-                $paramsteps = array($questionattemptid);
-                $gradingneeded = $DB->count_records_sql($sqlcount, $paramsteps);
-                if ($gradingneeded > '0') {
-                    $sqlsteps = "SELECT max(sequencenumber) mseq
-                             FROM {question_attempt_steps}
-                             WHERE questionattemptid = ? and state ='needsgrading'";
-                    $rsattempts = $DB->get_record_sql($sqlsteps, $paramsteps);
-                    $maxseq = $rsattempts->mseq;
-                    $needsgrading = '0';
-                    if (!empty($maxseq)) {
-                        $sqlmax = "SELECT max(sequencenumber) mseq2
-                                   FROM {question_attempt_steps}
-                                   WHERE questionattemptid = ?";
-                        $rsmax = $DB->get_record_sql($sqlmax, $paramsteps);
-                        $maxattempt = $rsmax->mseq2;
-                        if ($maxattempt == $maxseq) {
-                            $needsgrading = '1';
-                        }
-                    }
-                    if ($needsgrading == '1') {
-                        $quizid = $recattempt->quizid;
-                        $sqlstepid = "SELECT id FROM {question_attempt_steps} WHERE questionattemptid = ?
-                                      AND sequencenumber = ? and state = 'needsgrading'";
-                        $paramsstepid = array($questionattemptid, $maxseq);
-                        $rstepid = $DB->get_record_sql($sqlstepid, $paramsstepid);
-                        $questionstepid = $rstepid->id;
-                        $quizattemptid = $recattempt->uniqueid;
-                        $courseid = $recattempt->course;
-                        $userid = $recattempt->userid;
-                        $sqlngrade = "INSERT INTO {block_grade_me_quiz_ngrade} ( attemptid, userid, quizid,
-                                      questionattemptstepid, courseid ) VALUES( ?, ?, ?, ?, ?)";
-                        $paramsngrade = array($quizattemptid, $userid, $quizid, $questionstepid, $courseid);
-                        $DB->execute($sqlngrade, $paramsngrade);
-                    }
-                }
-            }
-
+        $rs = $DB->get_recordset_sql($sql, $giparams);
+        $batchbuffer = [];
+        foreach ($rs as $rec) {
+            $batchbuffer[] = (object) [
+                'itemname'       => $rec->itemname,
+                'itemtype'       => $rec->itemtype,
+                'itemmodule'     => $rec->itemmodule,
+                'iteminstance'   => $rec->iteminstance,
+                'itemsortorder'  => $rec->itemsortorder,
+                'courseid'       => $rec->courseid,
+                'coursename'     => $rec->coursename,
+                'coursemoduleid'  => $rec->coursemoduleid,
+            ];
         }
+        $rs->close();
+
+        // Flush all grade_items for this course in a single batched MERGE
+        // (PG 15+) or per-row upsert (PG < 15 / MySQL).
+        \block_grade_me\db_helper::batch_upsert_grade_me($batchbuffer);
+
+        // Build the quiz ngrade table for this course using a single bulk
+        // INSERT ... ON CONFLICT DO NOTHING (PG) or LEFT JOIN anti-pattern
+        // (MySQL) instead of the former row-by-row loop.
+        \block_grade_me\db_helper::bulk_insert_quiz_ngrade($cid);
     }
+    $courselist->close();
+
     set_config('cachedatalast', time(), 'block_grade_me');
     return true;
 }

@@ -80,50 +80,38 @@ class block_grade_me extends block_base {
         foreach ($courses as $courseid => $course) {
             unset($params);
             $gradeables = array();
-            $gradebookusers = array();
             $context = context_course::instance($courseid);
-            foreach (explode(',', $CFG->gradebookroles) as $roleid) {
-                $roleid = trim($roleid);
-                if ((groups_get_course_groupmode($course) == SEPARATEGROUPS) &&
-                    !has_capability('moodle/site:accessallgroups', $context)) {
-                    $groups = groups_get_user_groups($courseid, $USER->id);
-                    foreach ($groups[0] as $groupid) {
-                        $gradebookusers = array_merge($gradebookusers,
-                            array_keys(get_role_users($roleid, $context, false, 'u.id', 'u.id ASC', null, $groupid)));
-                    }
-                } else {
-                    $gradebookusers = array_merge($gradebookusers,
-                        array_keys(get_role_users($roleid, $context, false, 'u.id', 'u.id ASC')));
-                }
-            }
+
+            // Map each plugin to the userid column it filters on.
+            // This is needed because each plugin's query references a different table alias.
+            $plugin_userid_columns = [
+                'assign'   => 'asgn_sub.userid',
+                'quiz'     => 'bneeds.userid',
+                'forum'    => 'fp.userid',
+                'data'     => 'dr.userid',
+                'glossary' => 'ge.userid',
+                'lesson'   => 'la.userid',
+            ];
 
             $params['courseid'] = $courseid;
 
             foreach ($enabledplugins as $plugin => $a) {
                 if (has_capability($a['capability'], $context)) {
+                    $useridcol = $plugin_userid_columns[$plugin] ?? 'userid';
+                    [$usersql, $userparams] = \block_grade_me\db_helper::get_gradebook_users_sql(
+                        $useridcol, $courseid, $context, $USER->id, $course
+                    );
+
                     $fn = 'block_grade_me_query_' . $plugin;
-                    $pluginfn = $fn($gradebookusers);
+                    $pluginfn = $fn($usersql, $userparams);
                     if ($pluginfn !== false) {
-                        list($sql, $inparams) = $fn($gradebookusers);
+                        list($sql, $inparams) = $fn($usersql, $userparams);
                         $query = block_grade_me_query_prefix() . $sql . block_grade_me_query_suffix($plugin);
                         $values = array_merge($inparams, $params);
                         $rs = $DB->get_recordset_sql($query, $values);
 
                         foreach ($rs as $r) {
-                            if ($r->itemmodule == 'assign' && $r->maxattempts != '1') {
-                                /* Check to be sure its the most recent attempt being graded */
-                                $iteminstance = $r->iteminstance;
-                                $userid = $r->userid;
-                                $attemptnumber = $r->attemptnumber;
-                                $sql = 'select MAX(attemptnumber) from {assign_submission} where assignment = ' . $iteminstance .
-                                       ' and userid = ' . $userid;
-                                $maxattempt = $DB->get_field_sql($sql);
-                                if ($maxattempt == $attemptnumber) {
-                                    $gradeables = block_grade_me_array($gradeables, $r);
-                                }
-                            } else {
-                                $gradeables = block_grade_me_array($gradeables, $r);
-                            }
+                            $gradeables = block_grade_me_array($gradeables, $r);
                         }
                     }
                 }
@@ -135,7 +123,29 @@ class block_grade_me extends block_base {
                     break 1;
                 } else {
                     ksort($gradeables);
-                    $this->content->text .= block_grade_me_tree($gradeables);
+
+                    // Batch-load all user records for this course's gradeables
+                    // in a single query instead of N+1 individual lookups.
+                    $userids = [];
+                    foreach ($gradeables as $key => $item) {
+                        if ($key === 'meta') {
+                            continue;
+                        }
+                        foreach ($item as $subkey => $submission) {
+                            if ($subkey === 'meta') {
+                                continue;
+                            }
+                            if (isset($submission['meta']['userid'])) {
+                                $userids[$submission['meta']['userid']] = true;
+                            }
+                        }
+                    }
+                    $usercache = [];
+                    if (!empty($userids)) {
+                        $usercache = $DB->get_records_list('user', 'id', array_keys($userids), '', 'id,firstname,lastname');
+                    }
+
+                    $this->content->text .= block_grade_me_tree($gradeables, $usercache);
                 }
             }
             unset($gradeables);

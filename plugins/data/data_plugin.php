@@ -24,26 +24,26 @@ function block_grade_me_required_capability_data() {
 }
 
 /**
- * Build SQL query for the data plugin
+ * Build SQL query for the data plugin.
  *
- * @param array $gradebookusers ID's of gradebook users
- * @return array|bool SQL query and parameters or false on failure
+ * @param string $usersql  SQL fragment for filtering users (e.g. "dr.userid IN (SELECT ...)")
+ * @param array  $userparams Named parameters for $usersql
+ * @return array|false SQL query and parameters, or false when $usersql is empty
  */
-function block_grade_me_query_data($gradebookusers) {
+function block_grade_me_query_data(string $usersql, array $userparams) {
     global $USER, $DB;
 
-    if (empty($gradebookusers)) {
+    if (empty($usersql)) {
         return false;
     }
     $concatid = $DB->sql_concat('dr.id', "'-'", $USER->id);
     $concatitem = $DB->sql_concat('r.itemid', "'-'", 'r.userid');
-    list($insql, $inparams) = $DB->get_in_or_equal($gradebookusers);
 
     $query = ", dr.id submissionid, dr.userid, dr.timemodified timesubmitted
         FROM {data_records} dr
         JOIN {data} d ON d.id = dr.dataid
    LEFT JOIN {block_grade_me} bgm ON bgm.courseid = d.course AND bgm.iteminstance = d.id
-       WHERE dr.userid $insql
+       WHERE $usersql
              AND d.assessed = 1
              AND $concatid NOT IN (
              SELECT $concatitem
@@ -56,5 +56,5 @@ function block_grade_me_query_data($gradebookusers) {
                     )
              )";
 
-    return array($query, $inparams);
+    return array($query, $userparams);
 }

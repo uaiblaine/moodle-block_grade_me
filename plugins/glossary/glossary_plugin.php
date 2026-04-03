@@ -24,26 +24,26 @@ function block_grade_me_required_capability_glossary() {
 }
 
 /**
- * Build SQL query for the glossy plugin
+ * Build SQL query for the glossary plugin.
  *
- * @param array $gradebookusers ID's of gradebook users
- * @return array|bool SQL query and parameters or false on failure
+ * @param string $usersql  SQL fragment for filtering users (e.g. "ge.userid IN (SELECT ...)")
+ * @param array  $userparams Named parameters for $usersql
+ * @return array|false SQL query and parameters, or false when $usersql is empty
  */
-function block_grade_me_query_glossary($gradebookusers) {
+function block_grade_me_query_glossary(string $usersql, array $userparams) {
     global $USER, $DB;
 
-    if (empty($gradebookusers)) {
+    if (empty($usersql)) {
         return false;
     }
     $concatid = $DB->sql_concat('ge.id', "'-'", $USER->id);
     $concatitem = $DB->sql_concat('r.itemid', "'-'", 'r.userid');
-    list($insql, $inparams) = $DB->get_in_or_equal($gradebookusers);
 
     $query = ", ge.id submissionid, ge.userid, ge.timemodified timesubmitted
         FROM {glossary_entries} ge
         JOIN {glossary} g ON g.id = ge.glossaryid
    LEFT JOIN {block_grade_me} bgm ON bgm.courseid = g.course AND bgm.iteminstance = ge.glossaryid
-       WHERE ge.userid $insql
+       WHERE $usersql
          AND g.assessed >= 1
          AND g.scale <> 0
          AND $concatid NOT IN (
@@ -57,5 +57,5 @@ function block_grade_me_query_glossary($gradebookusers) {
                     )
              )";
 
-    return array($query, $inparams);
+    return array($query, $userparams);
 }

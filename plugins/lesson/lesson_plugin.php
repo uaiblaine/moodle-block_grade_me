@@ -29,18 +29,16 @@ function block_grade_me_required_capability_lesson() {
 }
 
 /**
- * Build SQL query for the lesson plugin
+ * Build SQL query for the lesson plugin.
  *
- * @param array $gradebookusers ID's of gradebook users
- * @return array|bool SQL query and parameters or false on failure
+ * @param string $usersql  SQL fragment for filtering users (e.g. "la.userid IN (SELECT ...)")
+ * @param array  $userparams Named parameters for $usersql
+ * @return array|false SQL query and parameters, or false when $usersql is empty
  */
-function block_grade_me_query_lesson($gradebookusers) {
-    global $DB;
-
-    if (empty($gradebookusers)) {
+function block_grade_me_query_lesson(string $usersql, array $userparams) {
+    if (empty($usersql)) {
         return false;
     }
-    list($insql, $inparams) = $DB->get_in_or_equal($gradebookusers);
 
     $query = ", la.id submissionid, la.userid, lans.timecreated timesubmitted
         FROM {lesson_attempts} la
@@ -49,7 +47,7 @@ function block_grade_me_query_lesson($gradebookusers) {
         JOIN {lesson_pages} lp ON lp.lessonid = l.id AND lp.qtype = 10 AND la.pageid = lp.id
    LEFT JOIN {block_grade_me} bgm ON bgm.courseid = l.course AND bgm.iteminstance = l.id
    LEFT JOIN {lesson_grades} lg ON lg.lessonid = l.id AND lg.userid = la.userid
-       WHERE la.userid $insql AND l.grade > 0 AND la.useranswer LIKE ?";
-    $inparams[] = '%s:6:"graded";i:0%';
-    return array($query, $inparams);
+       WHERE $usersql AND l.grade > 0 AND la.useranswer LIKE :bgm_lesson_graded";
+    $userparams['bgm_lesson_graded'] = '%s:6:"graded";i:0%';
+    return array($query, $userparams);
 }

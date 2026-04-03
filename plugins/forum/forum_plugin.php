@@ -24,27 +24,27 @@ function block_grade_me_required_capability_forum() {
 }
 
 /**
- * Build SQL query for the forum plugin
+ * Build SQL query for the forum plugin.
  *
- * @param array $gradebookusers ID's of gradebook users
- * @return array|bool SQL query and parameters or false on failure
+ * @param string $usersql  SQL fragment for filtering users (e.g. "fp.userid IN (SELECT ...)")
+ * @param array  $userparams Named parameters for $usersql
+ * @return array|false SQL query and parameters, or false when $usersql is empty
  */
-function block_grade_me_query_forum($gradebookusers) {
+function block_grade_me_query_forum(string $usersql, array $userparams) {
     global $USER, $DB;
 
-    if (empty($gradebookusers)) {
+    if (empty($usersql)) {
         return false;
     }
     $concatid = $DB->sql_concat('fp.id', "'-'", $USER->id);
     $concatitem = $DB->sql_concat('r.itemid', "'-'", 'r.userid');
-    list($insql, $inparams) = $DB->get_in_or_equal($gradebookusers);
 
     $query = ", fp.id submissionid, fp.userid, fp.modified timesubmitted, fd.id as forum_discussion_id
         FROM {forum_posts} fp
         JOIN {forum_discussions} fd ON fd.id = fp.discussion
         JOIN {forum} f ON f.id = fd.forum
    LEFT JOIN {block_grade_me} bgm ON bgm.courseid = f.course AND bgm.iteminstance = f.id
-       WHERE fp.userid $insql
+       WHERE $usersql
          AND f.assessed != 0
          AND $concatid NOT IN (
              SELECT $concatitem
@@ -57,5 +57,5 @@ function block_grade_me_query_forum($gradebookusers) {
                     )
              )";
 
-    return array($query, $inparams);
+    return array($query, $userparams);
 }
