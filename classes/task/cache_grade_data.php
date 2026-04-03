@@ -26,11 +26,22 @@ namespace block_grade_me\task;
 defined('MOODLE_INTERNAL') || die();
 
 
+/**
+ * Task to caching grade me data.
+ */
 class cache_grade_data extends \core\task\scheduled_task {
+    /**
+     * Get a descriptive name for this task.
+     *
+     * @return string
+     */
     public function get_name() {
         return get_string('pluginname', 'block_grade_me');
     }
 
+    /**
+     * Preform the task logic.
+     */
     public function execute() {
         global $CFG;
         require_once($CFG->dirroot . '/blocks/grade_me/lib.php');

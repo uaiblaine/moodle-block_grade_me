@@ -22,7 +22,14 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+/**
+ * Grade Me block definition.
+ */
 class block_grade_me extends block_base {
+
+    /**
+     * Block initialization.
+     */
     public function init() {
         $this->title = get_string('pluginname', 'block_grade_me', []);
     }
@@ -36,15 +43,15 @@ class block_grade_me extends block_base {
      * @return stdClass The content being rendered for this block
      */
     public function get_content() {
-        global $CFG, $USER, $COURSE, $DB, $OUTPUT, $PAGE;
+        global $CFG, $USER, $COURSE, $DB, $OUTPUT;
 
         if ($this->content !== null) {
             return $this->content;
         }
 
         require_once($CFG->dirroot . '/blocks/grade_me/lib.php');
-        $PAGE->requires->jquery();
-        $PAGE->requires->js('/blocks/grade_me/javascript/grademe.js');
+        $this->page->requires->jquery();
+        $this->page->requires->js('/blocks/grade_me/javascript/grademe.js');
 
         // Create the content class.
         $this->content = new stdClass();
