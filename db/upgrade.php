@@ -195,5 +195,18 @@ function xmldb_block_grade_me_upgrade($oldversion, $block) {
         upgrade_block_savepoint(true, 2026040301, 'grade_me');
     }
 
+    if ($oldversion < 2026040302) {
+        // Clean up legacy 'itemid' column that might have been left behind
+        // by the 2013 rename in some PostgreSQL distributions.
+        // Its presence breaks the optimized MERGE UPSERT constraints.
+        $table = new xmldb_table('block_grade_me');
+        $field = new xmldb_field('itemid');
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->drop_field($table, $field);
+        }
+
+        upgrade_block_savepoint(true, 2026040302, 'grade_me');
+    }
+
     return true;
 }
