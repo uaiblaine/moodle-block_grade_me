@@ -18,7 +18,11 @@
  * Lesson plugin file.
  *
  * @package    block_grade_me
- * Required capabilities for the lesson plugin.
+ * @copyright  2026 block_grade_me contributors
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+/**
  *
  * @return array Array of required capability information.
  */

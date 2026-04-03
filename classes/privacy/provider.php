@@ -31,7 +31,6 @@ use core_privacy\local\request\contextlist;
 use core_privacy\local\request\approved_userlist;
 use core_privacy\local\request\userlist;
 
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * The block_grade_me does not store any data.

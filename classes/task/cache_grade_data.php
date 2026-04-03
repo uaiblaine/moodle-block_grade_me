@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Scheduled tasks block_grade_me.
+ *
  * @package    block_grade_me
  * @copyright  2017 Derek Henderson {@link http://www.remote-learner.net}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later

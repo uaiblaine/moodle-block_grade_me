@@ -34,6 +34,9 @@ class behat_block_grade_me extends behat_base {
      * @Given the grade me block is present on all pages.
      */
     public function the_grade_me_block_is_present_on_all_pages() {
+        // Using mod_assign as the example, as assignment is the most
+        // common mod used by the block, and the easiest to get grading
+        // information into quickly via data generators.
         global $DB;
         $instancerec = (object)[
             'blockname' => 'grade_me',
@@ -51,7 +54,7 @@ class behat_block_grade_me extends behat_base {
     /**
      * Sets the specified value to the field with xpath.
      *
-     * @Given /^I set the hidden field with xpath "(?P<fieldxpath_string>(?:[^"]|\\")*)" to "(?P<field_value_string>(?:[^"]|\\")*)"$/
+     * @Given /^I set the hidden field with xpath "(?P<xpath>(?:[^"]|\\")*)" to "(?P<value>(?:[^"]|\\")*)"$/
      * @throws ElementNotFoundException Thrown by behat_base::find
      * @param string $field
      * @param string $value

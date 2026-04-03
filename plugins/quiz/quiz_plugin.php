@@ -21,6 +21,19 @@ require_once($CFG->dirroot . '/question/engine/states.php');
 
 require_once($CFG->dirroot . '/question/engine/lib.php');
 
+/**
+ * Quiz plugin file.
+ *
+ * @package    block_grade_me
+ * @copyright  2026 block_grade_me contributors
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+/**
+ * Required capabilities for the quiz plugin.
+ *
+ * @return array Array of required capability information.
+ */
 function block_grade_me_required_capability_quiz() {
     $enabledplugins['quiz'] = [
         'capability' => 'mod/quiz:grade',

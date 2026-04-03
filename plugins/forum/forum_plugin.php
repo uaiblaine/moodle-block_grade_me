@@ -14,6 +14,19 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Forum plugin file.
+ *
+ * @package    block_grade_me
+ * @copyright  2026 block_grade_me contributors
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+/**
+ * Required capabilities for the forum plugin.
+ *
+ * @return array Array of required capability information.
+ */
 function block_grade_me_required_capability_forum() {
     $enabledplugins['forum'] = [
         'capability' => 'mod/forum:rate',

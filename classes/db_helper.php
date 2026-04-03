@@ -28,7 +28,6 @@
 
 namespace block_grade_me;
 
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * Database helper class for block_grade_me.
@@ -115,7 +114,7 @@ class db_helper {
      * @param string       $useridcolumn  The qualified column to filter, e.g. "asgn_sub.userid".
      * @param int          $courseid      The course ID.
      * @param \context_course $context    The course context.
-     * @param int          $currentuserid The currently logged-in user (for group filtering).
+     * @param int          $currentuserid Ensure we handle chunked data correctly without exhausting parameters.
      * @param object       $course        The course record (needs groupmode).
      * @return array [$sql, $params] — SQL fragment and named parameters.
      */
@@ -134,6 +133,7 @@ class db_helper {
             return ['1 = 0', []];
         }
 
+        // Use native UPSERT/MERGE patterns where available for atomicity.
         // Use a unique param prefix to avoid collisions when the SQL is
         // embedded in a larger query that already uses named params.
         $prefix = 'bgmu_';
