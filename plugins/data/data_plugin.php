@@ -15,11 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 function block_grade_me_required_capability_data() {
-    $enabledplugins['data'] = array(
+    $enabledplugins['data'] = [
         'capability' => 'mod/data:rate',
         'default_on' => false,
-        'versiondependencies' => 'ANY_VERSION'
-        );
+        'versiondependencies' => 'ANY_VERSION',
+        ];
     return $enabledplugins;
 }
 
@@ -56,5 +56,5 @@ function block_grade_me_query_data(string $usersql, array $userparams) {
                     )
              )";
 
-    return array($query, $userparams);
+    return [$query, $userparams];
 }

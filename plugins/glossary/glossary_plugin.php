@@ -15,11 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 function block_grade_me_required_capability_glossary() {
-    $enabledplugins['glossary'] = array(
+    $enabledplugins['glossary'] = [
         'capability' => 'mod/glossary:rate',
         'default_on' => false,
-        'versiondependencies' => 'ANY_VERSION'
-        );
+        'versiondependencies' => 'ANY_VERSION',
+        ];
     return $enabledplugins;
 }
 
@@ -57,5 +57,5 @@ function block_grade_me_query_glossary(string $usersql, array $userparams) {
                     )
              )";
 
-    return array($query, $userparams);
+    return [$query, $userparams];
 }

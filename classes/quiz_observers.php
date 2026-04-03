@@ -25,8 +25,14 @@
 
 namespace block_grade_me;
 
+/**
+ * Quiz event observers.
+ *
+ * @package    block_grade_me
+ * @author     Remote-Learner.net Inc
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class quiz_observers {
-
     /**
      * A course content has been deleted.
      *
@@ -123,8 +129,10 @@ class quiz_observers {
         $count = $DB->get_record_sql($sql, [$record->uniqueid]);
         // Delete attempts if all questions are graded for attempt, leave other attempts by user for quiz untouched.
         if (empty($count->attempts)) {
-            $DB->delete_records('block_grade_me_quiz_ngrade',
-                ['attemptid' => $record->uniqueid, 'quizid' => $event->other['quizid']]);
+            $DB->delete_records(
+                'block_grade_me_quiz_ngrade',
+                ['attemptid' => $record->uniqueid, 'quizid' => $event->other['quizid']]
+            );
         }
     }
 }

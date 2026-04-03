@@ -21,23 +21,23 @@
  */
 defined('MOODLE_INTERNAL') || die();
 
-$tasks = array(
-    array(
+$tasks = [
+    [
         'classname' => 'block_grade_me\task\cache_grade_data',
         'blocking' => 0,
         'minute' => '*/15',
         'hour' => '*',
         'day' => '*',
         'dayofweek' => '*',
-        'month' => '*'
-    ),
-    array(
+        'month' => '*',
+    ],
+    [
         'classname' => 'block_grade_me\task\reset_block',
         'blocking' => 0,
         'minute' => '15',
         'hour' => '1',
         'day' => '*',
         'dayofweek' => '*',
-        'month' => '*'
-    ),
-);
+        'month' => '*',
+    ],
+];

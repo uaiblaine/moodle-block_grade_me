@@ -26,11 +26,11 @@
  * @return array Specifics on the capabilities of the assign plugin type
  */
 function block_grade_me_required_capability_assign() {
-    $enabledplugins['assign'] = array(
+    $enabledplugins['assign'] = [
         'capability' => 'mod/assign:grade',
         'default_on' => true,
-        'versiondependencies' => 'ANY_VERSION'
-        );
+        'versiondependencies' => 'ANY_VERSION',
+        ];
     return $enabledplugins;
 }
 
@@ -62,5 +62,5 @@ function block_grade_me_query_assign(string $usersql, array $userparams) {
                 AND s2.userid = asgn_sub.userid
          ))";
 
-    return array($query, $userparams);
+    return [$query, $userparams];
 }

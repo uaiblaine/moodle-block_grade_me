@@ -20,11 +20,11 @@
  * @return array Array of required capability information.
  */
 function block_grade_me_required_capability_lesson() {
-    $enabledplugins['lesson'] = array(
+    $enabledplugins['lesson'] = [
         'capability' => 'mod/lesson:grade',
         'default_on' => false,
-        'versiondependencies' => 'ANY_VERSION'
-    );
+        'versiondependencies' => 'ANY_VERSION',
+    ];
     return $enabledplugins;
 }
 
@@ -49,5 +49,5 @@ function block_grade_me_query_lesson(string $usersql, array $userparams) {
    LEFT JOIN {lesson_grades} lg ON lg.lessonid = l.id AND lg.userid = la.userid
        WHERE $usersql AND l.grade > 0 AND la.useranswer LIKE :bgm_lesson_graded";
     $userparams['bgm_lesson_graded'] = '%s:6:"graded";i:0%';
-    return array($query, $userparams);
+    return [$query, $userparams];
 }

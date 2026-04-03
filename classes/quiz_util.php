@@ -25,8 +25,14 @@
 
 namespace block_grade_me;
 
+/**
+ * Quiz utility class.
+ *
+ * @package    block_grade_me
+ * @author     Remote-Learner.net Inc
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class quiz_util {
-
     /**
      * Update quiz ngrade table with quizzes needing grading.
      *

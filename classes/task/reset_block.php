@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Scheduled task to reset the block grade me cache.
+ *
  * @package    block_grade_me
  * @copyright  2017 Derek Henderson {@link http://www.remote-learner.net}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -25,7 +27,6 @@ defined('MOODLE_INTERNAL') || die();
 
 
 class reset_block extends \core\task\scheduled_task {
-
     public function get_name() {
         return get_string('pluginname-reset', 'block_grade_me');
     }

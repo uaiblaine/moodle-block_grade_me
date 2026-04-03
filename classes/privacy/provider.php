@@ -46,7 +46,6 @@ class provider implements
 
     // This plugin currently implements the original plugin\provider interface.
     \core_privacy\local\request\plugin\provider {
-
     /**
      * Get the list of contexts that contain user information for the specified user.
      *
@@ -58,7 +57,7 @@ class provider implements
 
         $params = [
             'contextuser'   => CONTEXT_USER,
-            'userid'        => $userid
+            'userid'        => $userid,
         ];
 
         $sql = "SELECT c.id
@@ -92,7 +91,7 @@ class provider implements
         $userid = $context->instanceid;
 
         $params = [
-            'userid' => $userid
+            'userid' => $userid,
         ];
 
         $sql = "SELECT *
@@ -107,7 +106,7 @@ class provider implements
 
         $subcontext = [
             get_string('pluginname', 'block_grade_me'),
-            get_string('privacydata', 'block_grade_me')
+            get_string('privacydata', 'block_grade_me'),
         ];
 
         writer::with_context($context)->export_data($subcontext, $data);
@@ -198,5 +197,4 @@ class provider implements
             self::delete_data_for_user($contextlist);
         }
     }
-
 }

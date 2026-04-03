@@ -30,31 +30,31 @@ $observers = [
     [
         'eventname' => '\core\event\course_content_deleted',
         'callback' => '\block_grade_me\quiz_observers::course_content_deleted',
-        'internal' => false
+        'internal' => false,
     ],
     [
         'eventname' => '\core\event\course_reset_ended',
         'callback' => '\block_grade_me\quiz_observers::course_reset_ended',
-        'internal' => false
+        'internal' => false,
     ],
     [
         'eventname' => '\core\event\course_module_deleted',
         'callback' => '\block_grade_me\quiz_observers::course_module_deleted',
-        'internal' => false
+        'internal' => false,
     ],
     [
         'eventname' => '\mod_quiz\event\attempt_deleted',
         'callback' => '\block_grade_me\quiz_observers::attempt_deleted',
-        'internal' => false
+        'internal' => false,
     ],
     [
         'eventname' => '\mod_quiz\event\attempt_submitted',
         'callback' => '\block_grade_me\quiz_observers::attempt_submitted',
-        'internal' => false
+        'internal' => false,
     ],
     [
         'eventname' => '\mod_quiz\event\question_manually_graded',
         'callback' => '\block_grade_me\quiz_observers::question_manually_graded',
-        'internal' => false
+        'internal' => false,
     ],
 ];

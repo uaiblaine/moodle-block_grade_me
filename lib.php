@@ -67,7 +67,7 @@ function block_grade_me_query_suffix($mod) {
  */
 function block_grade_me_enabled_plugins() {
     global $CFG;
-    $enabledplugins = array();
+    $enabledplugins = [];
     $plugins = get_list_of_plugins('blocks/grade_me/plugins');
     foreach ($plugins as $plugin) {
         $pluginfile = $CFG->dirroot . '/blocks/grade_me/plugins/' . $plugin . '/' . $plugin . '_plugin.php';
@@ -115,7 +115,7 @@ function block_grade_me_tree($course, array $usercache = []) {
     global $CFG, $DB, $OUTPUT, $SESSION;
 
     // Get time format string.
-    $datetimestring = get_string('datetime', 'block_grade_me', array());
+    $datetimestring = get_string('datetime', 'block_grade_me', []);
     // Grading image.
     $gradeimg = $CFG->wwwroot . '/blocks/grade_me/pix/check_mark.png';
     // Define text variable.
@@ -126,11 +126,11 @@ function block_grade_me_tree($course, array $usercache = []) {
     unset($course['meta']);
 
     $gradebooklink = $CFG->wwwroot . '/grade/report/index.php?id=' . $courseid . '" title="' .
-        get_string('link_gradebook_icon', 'block_grade_me', array('course_name' => $coursename));
-    $altgradebook = get_string('alt_gradebook', 'block_grade_me', array('course_name' => $coursename));
-    $gradebookicon = $OUTPUT->pix_icon('i/grades', $altgradebook, null, array('class' => 'gm_icon'));
+        get_string('link_gradebook_icon', 'block_grade_me', ['course_name' => $coursename]);
+    $altgradebook = get_string('alt_gradebook', 'block_grade_me', ['course_name' => $coursename]);
+    $gradebookicon = $OUTPUT->pix_icon('i/grades', $altgradebook, null, ['class' => 'gm_icon']);
     $courselink = $CFG->wwwroot . '/course/view.php?id=' . $courseid;
-    $coursetitle = get_string('link_gradebook', 'block_grade_me', array('course_name' => $coursename));
+    $coursetitle = get_string('link_gradebook', 'block_grade_me', ['course_name' => $coursename]);
     $text .= '<div><dt id="courseid' . $courseid . '" class="cmod">
                 <div tabindex=0 class="toggle open fa fa-caret-right" aria-hidden="true"
                     onclick="$(\'dt#courseid' . $courseid . ' > div.toggle\')
@@ -157,8 +157,8 @@ function block_grade_me_tree($course, array $usercache = []) {
         } else {
             $gradelink = $modulelink;
         }
-        $moduletitle = get_string('link_mod', 'block_grade_me', array('mod_name' => $itemmodule));
-        $moduleicon = $OUTPUT->pix_icon('icon', $moduletitle, $itemmodule, array('class' => 'gm_icon'));
+        $moduletitle = get_string('link_mod', 'block_grade_me', ['mod_name' => $itemmodule]);
+        $moduleicon = $OUTPUT->pix_icon('icon', $moduletitle, $itemmodule, ['class' => 'gm_icon']);
 
         $text .= '<dd id="cmid' . $coursemoduleid . '" class="module">' . "\n";  // Open module.
         $text .= '<div class="dd-wrap">' . "\n";
@@ -201,20 +201,20 @@ function block_grade_me_tree($course, array $usercache = []) {
 
             unset($submission['meta']);
 
-            $submissiontitle = get_string('link_grade_img', 'block_grade_me', array());
-            $altmark = get_string('alt_mark', 'block_grade_me', array());
+            $submissiontitle = get_string('link_grade_img', 'block_grade_me', []);
+            $altmark = get_string('alt_mark', 'block_grade_me', []);
 
             // Use preloaded user cache instead of per-submission DB query.
             if (isset($usercache[$userid])) {
                 $user = $usercache[$userid];
             } else {
                 // Fallback for safety (e.g. direct calls without cache).
-                $user = $DB->get_record('user', array('id' => $userid));
+                $user = $DB->get_record('user', ['id' => $userid]);
             }
 
             $userfirst = $user->firstname;
             $userfirstlast = $user->firstname . ' ' . $user->lastname;
-            $userprofiletitle = get_string('link_user_profile', 'block_grade_me', array('first_name' => $userfirst));
+            $userprofiletitle = get_string('link_user_profile', 'block_grade_me', ['first_name' => $userfirst]);
 
             $text .= '<li class="gradable">';  // Open gradable.
             $text .= '<a class="gradable-icon" href="' . $submissionlink . '" title="' . $submissiontitle . '">
@@ -251,7 +251,7 @@ function block_grade_me_cache_reset() {
 function block_grade_me_cache_grade_data() {
     global $CFG, $DB;
 
-    $lastrun = $DB->get_field('task_scheduled', 'lastruntime', array('classname' => 'cache_grade_data'));
+    $lastrun = $DB->get_field('task_scheduled', 'lastruntime', ['classname' => 'cache_grade_data']);
     $enabledplugins = array_keys(block_grade_me_enabled_plugins());
 
     if (empty($enabledplugins)) {

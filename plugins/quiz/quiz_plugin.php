@@ -22,11 +22,11 @@ require_once($CFG->dirroot . '/question/engine/states.php');
 require_once($CFG->dirroot . '/question/engine/lib.php');
 
 function block_grade_me_required_capability_quiz() {
-    $enabledplugins['quiz'] = array(
+    $enabledplugins['quiz'] = [
         'capability' => 'mod/quiz:grade',
         'default_on' => true,
-        'versiondependencies' => 'ANY_VERSION'
-        );
+        'versiondependencies' => 'ANY_VERSION',
+        ];
     return $enabledplugins;
 }
 
@@ -51,6 +51,6 @@ function block_grade_me_query_quiz(string $usersql, array $userparams) {
                                         AND qas.questionattemptid = qna.id
         JOIN {block_grade_me} bgm ON bgm.iteminstance = qza.quiz
                                      AND bgm.itemmodule = 'quiz'
-       WHERE qas.state = '".question_state::$needsgrading."'";
-    return array($query, $userparams);
+       WHERE qas.state = '" . question_state::$needsgrading . "'";
+    return [$query, $userparams];
 }

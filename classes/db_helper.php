@@ -30,8 +30,14 @@ namespace block_grade_me;
 
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Database helper class for block_grade_me.
+ *
+ * @package    block_grade_me
+ * @copyright  2026 block_grade_me contributors
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class db_helper {
-
     /** @var string|null Cached DB server version string. */
     private static ?string $dbversion = null;
 
@@ -142,8 +148,10 @@ class db_helper {
         // Determine group restriction.
         $groupjoin = '';
         $groupwhere = '';
-        if (groups_get_course_groupmode($course) == SEPARATEGROUPS
-                && !has_capability('moodle/site:accessallgroups', $context)) {
+        if (
+            groups_get_course_groupmode($course) == SEPARATEGROUPS
+                && !has_capability('moodle/site:accessallgroups', $context)
+        ) {
             $groups = groups_get_user_groups($courseid, $currentuserid);
             $groupids = $groups[0] ?? [];
             if (empty($groupids)) {
@@ -184,7 +192,7 @@ class db_helper {
     }
 
     // -----------------------------------------------------------------------
-    //  UPSERT — block_grade_me table
+    // UPSERT — block_grade_me table
     // -----------------------------------------------------------------------
 
     /**
@@ -244,7 +252,6 @@ class db_helper {
                                 source.iteminstance, source.itemsortorder, source.courseid,
                                 source.coursename, source.coursemoduleid)";
             $DB->execute($sql, $params);
-
         } else if (self::is_postgres()) {
             // PG < 15: INSERT ... ON CONFLICT DO UPDATE.
             $sql = "INSERT INTO {block_grade_me}
@@ -259,7 +266,6 @@ class db_helper {
                         coursename    = EXCLUDED.coursename,
                         coursemoduleid = EXCLUDED.coursemoduleid";
             $DB->execute($sql, $params);
-
         } else {
             // MySQL/MariaDB fallback: SELECT + INSERT or UPDATE.
             self::upsert_grade_me_crossdb($record);
@@ -388,7 +394,7 @@ class db_helper {
     }
 
     // -----------------------------------------------------------------------
-    //  BULK INSERT — block_grade_me_quiz_ngrade table
+    // BULK INSERT — block_grade_me_quiz_ngrade table
     // -----------------------------------------------------------------------
 
     /**

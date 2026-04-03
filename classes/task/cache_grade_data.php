@@ -25,7 +25,6 @@ defined('MOODLE_INTERNAL') || die();
 
 
 class cache_grade_data extends \core\task\scheduled_task {
-
     public function get_name() {
         return get_string('pluginname', 'block_grade_me');
     }

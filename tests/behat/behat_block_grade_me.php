@@ -26,7 +26,6 @@ require_once(__DIR__ . '/../../../../lib/behat/behat_base.php');
  * Behat step definitions for block_grade_me.
  */
 class behat_block_grade_me extends behat_base {
-
     /**
      * @Given the grade me block is present on all pages.
      */

@@ -23,9 +23,8 @@
  */
 
 class block_grade_me extends block_base {
-
     public function init() {
-        $this->title = get_string('pluginname', 'block_grade_me', array());
+        $this->title = get_string('pluginname', 'block_grade_me', []);
     }
 
     /**
@@ -48,7 +47,7 @@ class block_grade_me extends block_base {
         $PAGE->requires->js('/blocks/grade_me/javascript/grademe.js');
 
         // Create the content class.
-        $this->content = new stdClass;
+        $this->content = new stdClass();
         $this->content->text = '';
         $this->content->footer = '';
 
@@ -57,7 +56,7 @@ class block_grade_me extends block_base {
         }
 
         // Setup arrays.
-        $gradeables = array();
+        $gradeables = [];
 
         $groups = null;
 
@@ -79,7 +78,7 @@ class block_grade_me extends block_base {
 
         foreach ($courses as $courseid => $course) {
             unset($params);
-            $gradeables = array();
+            $gradeables = [];
             $context = context_course::instance($courseid);
 
             // Map each plugin to the userid column it filters on.
@@ -99,13 +98,17 @@ class block_grade_me extends block_base {
                 if (has_capability($a['capability'], $context)) {
                     $useridcol = $plugin_userid_columns[$plugin] ?? 'userid';
                     [$usersql, $userparams] = \block_grade_me\db_helper::get_gradebook_users_sql(
-                        $useridcol, $courseid, $context, $USER->id, $course
+                        $useridcol,
+                        $courseid,
+                        $context,
+                        $USER->id,
+                        $course
                     );
 
                     $fn = 'block_grade_me_query_' . $plugin;
                     $pluginfn = $fn($usersql, $userparams);
                     if ($pluginfn !== false) {
-                        list($sql, $inparams) = $fn($usersql, $userparams);
+                        [$sql, $inparams] = $fn($usersql, $userparams);
                         $query = block_grade_me_query_prefix() . $sql . block_grade_me_query_suffix($plugin);
                         $values = array_merge($inparams, $params);
                         $rs = $DB->get_recordset_sql($query, $values);
@@ -119,7 +122,7 @@ class block_grade_me extends block_base {
             if (count($gradeables) > 0) {
                 $coursecount++;
                 if ($coursecount > $maxcourses) {
-                    $additional = get_string('excess', 'block_grade_me', array('maxcourses' => $maxcourses));
+                    $additional = get_string('excess', 'block_grade_me', ['maxcourses' => $maxcourses]);
                     break 1;
                 } else {
                     ksort($gradeables);
@@ -151,7 +154,7 @@ class block_grade_me extends block_base {
             unset($gradeables);
         }
 
-        $graderroles = array();
+        $graderroles = [];
         foreach ($enabledplugins as $plugin => $a) {
             foreach (array_keys(get_roles_with_capability($a['capability'])) as $role) {
                 $graderroles[$role] = true;
@@ -183,7 +186,7 @@ class block_grade_me extends block_base {
      * @return array The formats which apply to this block
      */
     public function applicable_formats() {
-        return array('all' => true);
+        return ['all' => true];
     }
 
     /**
