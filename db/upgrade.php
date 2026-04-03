@@ -203,7 +203,7 @@ function xmldb_block_grade_me_upgrade($oldversion, $block) {
         if ($dbman->field_exists($table, $field)) {
             // Postgres requires dropping dependent indexes / keys first.
             $key = new xmldb_key('itemid', XMLDB_KEY_FOREIGN, ['itemid'], 'grade_items', ['id']);
-            if ($dbman->key_exists($table, $key)) {
+            if ($dbman->find_key_name($table, $key)) {
                 $dbman->drop_key($table, $key);
             }
 
