@@ -49,8 +49,10 @@ class block_grade_me extends block_base {
         }
 
         require_once($CFG->dirroot . '/blocks/grade_me/lib.php');
-        $this->page->requires->jquery();
-        $this->page->requires->js('/blocks/grade_me/javascript/grademe.js');
+        if (!empty($this->page) && !empty($this->page->requires)) {
+            $this->page->requires->jquery();
+            $this->page->requires->js('/blocks/grade_me/javascript/grademe.js');
+        }
 
         // Create the content class.
         $this->content = new stdClass();
