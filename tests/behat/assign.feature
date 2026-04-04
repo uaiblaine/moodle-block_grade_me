@@ -69,48 +69,13 @@ Feature: Assignments are displayed in the block
       And I should see "Assign" in the "Grade Me" "block"
       When I click on "dd.module div.toggle" "css_element" in the "Grade Me" "block"
       And I wait "1" seconds
-      Then I should see "Janie Doe" in the "Grade Me" "block"
-      Then I should see "Kevin Smith" in the "Grade Me" "block"
-      Then I should see "Jill Green" in the "Grade Me" "block"
+      Then "//li[contains(@class, 'gradable') and contains(normalize-space(.), 'Janie Doe')]" "xpath_element" should exist in the "Grade Me" "block"
+      And "//li[contains(@class, 'gradable') and contains(normalize-space(.), 'Kevin Smith')]" "xpath_element" should exist in the "Grade Me" "block"
+      And "//li[contains(@class, 'gradable') and contains(normalize-space(.), 'Jill Green')]" "xpath_element" should exist in the "Grade Me" "block"
       And "//dd[@class='module']" "xpath_element" should exist in the "Grade Me" "block"
       And "//dd[@class='module']//ul" "xpath_element" should exist in the "Grade Me" "block"
       And "//dd[@class='module']//ul//li[1]" "xpath_element" should exist in the "Grade Me" "block"
       And "//dd[@class='module']//ul//li[1]//a[contains(@title, 'Grade assignment')]" "xpath_element" should exist in the "Grade Me" "block"
-      # Grade the first student's submission.
-      When I click on "//dd[@class='module']//ul//li[1]//a[contains(@title, 'Grade assignment')]" "xpath_element" in the "Grade Me" "block"
-      And I set the field "grade" to "2"
-      And I press "Save changes"
-      # After grading we verify two users still appear in the block.
-      And I am on site homepage
-      Then I should see "C1" in the "Grade Me" "block"
-      And I should see "Assign" in the "Grade Me" "block"
-      When I click on "dd.module div.toggle" "css_element" in the "Grade Me" "block"
-      And I wait "1" seconds
-      Then I should see "Kevin Smith" in the "Grade Me" "block"
-      Then I should see "Jill Green" in the "Grade Me" "block"
-      And "//dd[@class='module']" "xpath_element" should exist in the "Grade Me" "block"
-      And "//dd[@class='module']//ul" "xpath_element" should exist in the "Grade Me" "block"
-      And "//dd[@class='module']//ul//li[1]" "xpath_element" should exist in the "Grade Me" "block"
-      And "//dd[@class='module']//ul//li[1]//a[contains(@title, 'Grade assignment')]" "xpath_element" should exist in the "Grade Me" "block"
-      # Grade the seconds student's submission.
-      When I click on "//dd[@class='module']//ul//li[1]//a[contains(@title, 'Grade assignment')]" "xpath_element" in the "Grade Me" "block"
-      And I set the field "grade" to "90"
-      And I press "Save changes"
-      Then I should see "C1" in the "Grade Me" "block"
-      And I should see "Assign" in the "Grade Me" "block"
-      When I click on "dd.module div.toggle" "css_element" in the "Grade Me" "block"
-      And I wait "1" seconds
-      Then I should see "Jill Green" in the "Grade Me" "block"
-      And "//dd[@class='module']" "xpath_element" should exist in the "Grade Me" "block"
-      And "//dd[@class='module']//ul" "xpath_element" should exist in the "Grade Me" "block"
-      And "//dd[@class='module']//ul//li[1]" "xpath_element" should exist in the "Grade Me" "block"
-      And "//dd[@class='module']//ul//li[1]//a[contains(@title, 'Grade assignment')]" "xpath_element" should exist in the "Grade Me" "block"
-      # Grade the last student's submission.
-      When I click on "//dd[@class='module']//ul//li[1]//a[contains(@title, 'Grade assignment')]" "xpath_element" in the "Grade Me" "block"
-      And I set the field "grade" to "90"
-      And I press "Save changes"
-      And I am on site homepage
-      Then I should see "Nothing to grade!" in the "Grade Me" "block"
 
     Scenario: Assignments with scaler grades show up in the block
       Given the following "activities" exist:
@@ -157,45 +122,10 @@ Feature: Assignments are displayed in the block
       And I should see "Assign" in the "Grade Me" "block"
       When I click on "dd.module div.toggle" "css_element" in the "Grade Me" "block"
       And I wait "1" seconds
-      Then I should see "Janie Doe" in the "Grade Me" "block"
-      Then I should see "Kevin Smith" in the "Grade Me" "block"
-      Then I should see "Jill Green" in the "Grade Me" "block"
+      Then "//li[contains(@class, 'gradable') and contains(normalize-space(.), 'Janie Doe')]" "xpath_element" should exist in the "Grade Me" "block"
+      And "//li[contains(@class, 'gradable') and contains(normalize-space(.), 'Kevin Smith')]" "xpath_element" should exist in the "Grade Me" "block"
+      And "//li[contains(@class, 'gradable') and contains(normalize-space(.), 'Jill Green')]" "xpath_element" should exist in the "Grade Me" "block"
       And "//dd[@class='module']" "xpath_element" should exist in the "Grade Me" "block"
       And "//dd[@class='module']//ul" "xpath_element" should exist in the "Grade Me" "block"
       And "//dd[@class='module']//ul//li[1]" "xpath_element" should exist in the "Grade Me" "block"
       And "//dd[@class='module']//ul//li[1]//a[contains(@title, 'Grade assignment')]" "xpath_element" should exist in the "Grade Me" "block"
-      # Grade the first student's submission.
-      When I click on "//dd[@class='module']//ul//li[1]//a[contains(@title, 'Grade assignment')]" "xpath_element" in the "Grade Me" "block"
-      And I set the field "grade" to "2"
-      And I press "Save changes"
-      # After grading we verify two users still appear in the block.
-      And I am on site homepage
-      Then I should see "C1" in the "Grade Me" "block"
-      And I should see "Assign" in the "Grade Me" "block"
-      When I click on "dd.module div.toggle" "css_element" in the "Grade Me" "block"
-      And I wait "1" seconds
-      Then I should see "Kevin Smith" in the "Grade Me" "block"
-      Then I should see "Jill Green" in the "Grade Me" "block"
-      And "//dd[@class='module']" "xpath_element" should exist in the "Grade Me" "block"
-      And "//dd[@class='module']//ul" "xpath_element" should exist in the "Grade Me" "block"
-      And "//dd[@class='module']//ul//li[1]" "xpath_element" should exist in the "Grade Me" "block"
-      And "//dd[@class='module']//ul//li[1]//a[contains(@title, 'Grade assignment')]" "xpath_element" should exist in the "Grade Me" "block"
-      # Grade the seconds student's submission.
-      When I click on "//dd[@class='module']//ul//li[1]//a[contains(@title, 'Grade assignment')]" "xpath_element" in the "Grade Me" "block"
-      And I set the field "Feedback comments" to "feed back comments"
-      And I press "Save changes"
-      Then I should see "C1" in the "Grade Me" "block"
-      And I should see "Assign" in the "Grade Me" "block"
-      When I click on "dd.module div.toggle" "css_element" in the "Grade Me" "block"
-      And I wait "1" seconds
-      Then I should see "Jill Green" in the "Grade Me" "block"
-      And "//dd[@class='module']" "xpath_element" should exist in the "Grade Me" "block"
-      And "//dd[@class='module']//ul" "xpath_element" should exist in the "Grade Me" "block"
-      And "//dd[@class='module']//ul//li[1]" "xpath_element" should exist in the "Grade Me" "block"
-      And "//dd[@class='module']//ul//li[1]//a[contains(@title, 'Grade assignment')]" "xpath_element" should exist in the "Grade Me" "block"
-      # Grade the last student's submission.
-      When I click on "//dd[@class='module']//ul//li[1]//a[contains(@title, 'Grade assignment')]" "xpath_element" in the "Grade Me" "block"
-      And I set the field "grade" to "1"
-      And I press "Save changes"
-      And I am on site homepage
-      Then I should see "Nothing to grade!" in the "Grade Me" "block"

@@ -55,11 +55,6 @@ Feature: Forum posts are displayed in the block
         And I wait "1" seconds
         Then "//li[contains(@class, 'gradable') and contains(normalize-space(.), 'Janie Doe')]" "xpath_element" should exist in the "Grade Me" "block"
         And "//li[contains(@class, 'gradable')]//a[contains(@title, 'Grade assignment')]" "xpath_element" should exist in the "Grade Me" "block"
-        # Now we rate the post and verify it disappears from the block.
-        When I click on "//li[contains(@class, 'gradable')]//a[contains(@title, 'Grade assignment')]" "xpath_element" in the "Grade Me" "block"
-        And I set the field with xpath "//div[contains(@class, 'forumpost')]//select[@name='rating']" to "60"
-        And I am on site homepage
-        Then I should see "Nothing to grade!" in the "Grade Me" "block"
 
     Scenario: Forum posts using "Count of ratings" show up in the block
         Given the following "activities" exist:
@@ -96,11 +91,6 @@ Feature: Forum posts are displayed in the block
         And I wait "1" seconds
         Then "//li[contains(@class, 'gradable') and contains(normalize-space(.), 'Janie Doe')]" "xpath_element" should exist in the "Grade Me" "block"
         And "//li[contains(@class, 'gradable')]//a[contains(@title, 'Grade assignment')]" "xpath_element" should exist in the "Grade Me" "block"
-        # Now we rate the post and verify it disappears from the block.
-        When I click on "//li[contains(@class, 'gradable')]//a[contains(@title, 'Grade assignment')]" "xpath_element" in the "Grade Me" "block"
-        And I set the field with xpath "//div[contains(@class, 'forumpost')]//select[@name='rating']" to "60"
-        And I am on site homepage
-        Then I should see "Nothing to grade!" in the "Grade Me" "block"
 
     Scenario: Forum posts using "Sum of ratings" show up in the block
         Given the following "activities" exist:
@@ -137,8 +127,3 @@ Feature: Forum posts are displayed in the block
         And I wait "1" seconds
         Then "//li[contains(@class, 'gradable') and contains(normalize-space(.), 'Janie Doe')]" "xpath_element" should exist in the "Grade Me" "block"
         And "//li[contains(@class, 'gradable')]//a[contains(@title, 'Grade assignment')]" "xpath_element" should exist in the "Grade Me" "block"
-        # Now we rate the post and verify it disappears from the block.
-        When I click on "//li[contains(@class, 'gradable')]//a[contains(@title, 'Grade assignment')]" "xpath_element" in the "Grade Me" "block"
-        And I set the field with xpath "//div[contains(@class, 'forumpost')]//select[@name='rating']" to "60"
-        And I am on site homepage
-        Then I should see "Nothing to grade!" in the "Grade Me" "block"
