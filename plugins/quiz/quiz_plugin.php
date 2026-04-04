@@ -14,13 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
-
-global $CFG;
-require_once($CFG->dirroot . '/question/engine/states.php');
-
-require_once($CFG->dirroot . '/question/engine/lib.php');
-
 /**
  * Quiz plugin file.
  *
@@ -28,6 +21,13 @@ require_once($CFG->dirroot . '/question/engine/lib.php');
  * @copyright  2026 block_grade_me contributors
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
+require_once($CFG->dirroot . '/question/engine/states.php');
+
+require_once($CFG->dirroot . '/question/engine/lib.php');
 
 /**
  * Required capabilities for the quiz plugin.

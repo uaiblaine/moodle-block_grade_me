@@ -187,7 +187,7 @@ class grade_me_test extends \advanced_testcase {
                         if ($list === 'courses' && !isset($courses[$index])) {
                             $courses[$index] = $generator->create_course();
                         }
-                        
+
                         if (isset(${$list}[$index])) {
                             $datasetrows[$tablename][$row][$column] = ${$list}[$index]->$field;
                         }
