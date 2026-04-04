@@ -37,7 +37,7 @@ Feature: Assignments are displayed in the block
       And I set the following fields to these values:
         | Online text | 7 8 9 10. |
       And I press "Save changes"
-      Then I should see "Submitted for grading"
+      Then I should see "Submission status"
       And I log out
       # Student2  submit assigment.
       And I log in as "student2"
@@ -48,7 +48,7 @@ Feature: Assignments are displayed in the block
       And I set the following fields to these values:
         | Online text | A dog barked. |
       And I press "Save changes"
-      Then I should see "Submitted for grading"
+      Then I should see "Submission status"
       And I log out
       # Student3 submits assignment.
       And I log in as "student3"
@@ -59,7 +59,7 @@ Feature: Assignments are displayed in the block
       And I set the following fields to these values:
         | Online text | A pig made a noise. |
       And I press "Save changes"
-      Then I should see "Submitted for grading"
+      Then I should see "Submission status"
       And I log out
       # Now we check the block.
       When I log in as "admin"
@@ -122,7 +122,7 @@ Feature: Assignments are displayed in the block
       And I set the following fields to these values:
         | Online text | 7 8 9 10. |
       And I press "Save changes"
-      Then I should see "Submitted for grading"
+      Then I should see "Submission status"
       And I log out
       # Student2  submit assigment.
       And I log in as "student2"
@@ -133,7 +133,7 @@ Feature: Assignments are displayed in the block
       And I set the following fields to these values:
         | Online text | A dog barked. |
       And I press "Save changes"
-      Then I should see "Submitted for grading"
+      Then I should see "Submission status"
       And I log out
       # Student3 submits assignment.
       And I log in as "student3"
@@ -144,7 +144,7 @@ Feature: Assignments are displayed in the block
       And I set the following fields to these values:
         | Online text | A pig made a noise. |
       And I press "Save changes"
-      Then I should see "Submitted for grading"
+      Then I should see "Submission status"
       And I log out
       # Now we check the block.
       When I log in as "admin"
