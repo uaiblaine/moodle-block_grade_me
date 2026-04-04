@@ -52,6 +52,7 @@ Feature: Forum posts are displayed in the block
         And I should see "Test Forum" in the "Grade Me" "block"
         And I should not see "Janie Doe" in the "Grade Me" "block"
         When I click on "dd.module div.toggle" "css_element" in the "Grade Me" "block"
+        And I wait "1" seconds
         Then "//li[contains(@class, 'gradable') and contains(normalize-space(.), 'Janie Doe')]" "xpath_element" should exist in the "Grade Me" "block"
         And "//li[contains(@class, 'gradable')]//a[contains(@title, 'Grade assignment')]" "xpath_element" should exist in the "Grade Me" "block"
         # Now we rate the post and verify it disappears from the block.
@@ -92,6 +93,7 @@ Feature: Forum posts are displayed in the block
         And I should see "Test Forum" in the "Grade Me" "block"
         And I should not see "Janie Doe" in the "Grade Me" "block"
         When I click on "dd.module div.toggle" "css_element" in the "Grade Me" "block"
+        And I wait "1" seconds
         Then "//li[contains(@class, 'gradable') and contains(normalize-space(.), 'Janie Doe')]" "xpath_element" should exist in the "Grade Me" "block"
         And "//li[contains(@class, 'gradable')]//a[contains(@title, 'Grade assignment')]" "xpath_element" should exist in the "Grade Me" "block"
         # Now we rate the post and verify it disappears from the block.
@@ -132,6 +134,7 @@ Feature: Forum posts are displayed in the block
         And I should see "Test Forum" in the "Grade Me" "block"
         And I should not see "Janie Doe" in the "Grade Me" "block"
         When I click on "dd.module div.toggle" "css_element" in the "Grade Me" "block"
+        And I wait "1" seconds
         Then "//li[contains(@class, 'gradable') and contains(normalize-space(.), 'Janie Doe')]" "xpath_element" should exist in the "Grade Me" "block"
         And "//li[contains(@class, 'gradable')]//a[contains(@title, 'Grade assignment')]" "xpath_element" should exist in the "Grade Me" "block"
         # Now we rate the post and verify it disappears from the block.

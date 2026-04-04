@@ -77,6 +77,7 @@ Feature: Quizzes are supported by the block.
         And I should not see "Johnny Doe" in the "Grade Me" "block"
         And I should not see "Janie Doe" in the "Grade Me" "block"
         When I click on "dd.module div.toggle" "css_element" in the "Grade Me" "block"
+        And I wait "1" seconds
         Then "//li[contains(@class, 'gradable') and contains(normalize-space(.), 'Johnny Doe')]" "xpath_element" should exist in the "Grade Me" "block"
         And "//li[contains(@class, 'gradable') and contains(normalize-space(.), 'Janie Doe')]" "xpath_element" should exist in the "Grade Me" "block"
         And "//dd[@class='module']" "xpath_element" should exist in the "Grade Me" "block"
@@ -107,6 +108,7 @@ Feature: Quizzes are supported by the block.
         Then "//dd[@class='module']//ul//li[1]" "xpath_element" should exist in the "Grade Me" "block"
         And "//dd[@class='module']//ul//li[2]" "xpath_element" should not exist in the "Grade Me" "block"
         When I click on "dd.module div.toggle" "css_element" in the "Grade Me" "block"
+        And I wait "1" seconds
         Then I should not see "Johnny Doe" in the "Grade Me" "block"
         And I should see "Janie Doe" in the "Grade Me" "block"
         # Grade the second student's submission.

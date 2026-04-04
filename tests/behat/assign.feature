@@ -26,8 +26,8 @@ Feature: Assignments are displayed in the block
 
     Scenario: Assignments show up in the block
       Given the following "activities" exist:
-        | activity | name   | intro                   | course | idnumber | assignsubmission_onlinetext_enabled | assignsubmission_onlinetext_wordlimit_enabled | assignsubmission_onlinetext_wordlimit | assignsubmission_file_enabled |
-        | assign   | Assign | Submit your online text | C1     | assign1  | 1                                   | 1                                             | 10                                    | 0                             |
+        | activity | name   | intro                   | course | idnumber | submissiondrafts | assignsubmission_onlinetext_enabled | assignsubmission_onlinetext_wordlimit_enabled | assignsubmission_onlinetext_wordlimit | assignsubmission_file_enabled |
+        | assign   | Assign | Submit your online text | C1     | assign1  | 0                | 1                                   | 1                                             | 10                                    | 0                             |
       # Now the students submit assignments.
       And I log in as "student1"
       And I follow "My courses"
@@ -68,6 +68,7 @@ Feature: Assignments are displayed in the block
       Then I should see "C1" in the "Grade Me" "block"
       And I should see "Assign" in the "Grade Me" "block"
       When I click on "dd.module div.toggle" "css_element" in the "Grade Me" "block"
+      And I wait "1" seconds
       Then I should see "Janie Doe" in the "Grade Me" "block"
       Then I should see "Kevin Smith" in the "Grade Me" "block"
       Then I should see "Jill Green" in the "Grade Me" "block"
@@ -84,6 +85,7 @@ Feature: Assignments are displayed in the block
       Then I should see "C1" in the "Grade Me" "block"
       And I should see "Assign" in the "Grade Me" "block"
       When I click on "dd.module div.toggle" "css_element" in the "Grade Me" "block"
+      And I wait "1" seconds
       Then I should see "Kevin Smith" in the "Grade Me" "block"
       Then I should see "Jill Green" in the "Grade Me" "block"
       And "//dd[@class='module']" "xpath_element" should exist in the "Grade Me" "block"
@@ -97,6 +99,7 @@ Feature: Assignments are displayed in the block
       Then I should see "C1" in the "Grade Me" "block"
       And I should see "Assign" in the "Grade Me" "block"
       When I click on "dd.module div.toggle" "css_element" in the "Grade Me" "block"
+      And I wait "1" seconds
       Then I should see "Jill Green" in the "Grade Me" "block"
       And "//dd[@class='module']" "xpath_element" should exist in the "Grade Me" "block"
       And "//dd[@class='module']//ul" "xpath_element" should exist in the "Grade Me" "block"
@@ -111,8 +114,8 @@ Feature: Assignments are displayed in the block
 
     Scenario: Assignments with scaler grades show up in the block
       Given the following "activities" exist:
-        | activity | name   | intro                   | course | idnumber | assignsubmission_onlinetext_enabled | assignsubmission_onlinetext_wordlimit_enabled | assignsubmission_onlinetext_wordlimit | assignsubmission_file_enabled |
-        | assign   | Assign | Submit your online text | C1     | assign2  | 1                                   | 1                                             | 10                                    | 0                             |
+        | activity | name   | intro                   | course | idnumber | submissiondrafts | assignsubmission_onlinetext_enabled | assignsubmission_onlinetext_wordlimit_enabled | assignsubmission_onlinetext_wordlimit | assignsubmission_file_enabled |
+        | assign   | Assign | Submit your online text | C1     | assign2  | 0                | 1                                   | 1                                             | 10                                    | 0                             |
       # Now the students submit assignments.
       And I log in as "student1"
       And I follow "My courses"
@@ -153,6 +156,7 @@ Feature: Assignments are displayed in the block
       Then I should see "C1" in the "Grade Me" "block"
       And I should see "Assign" in the "Grade Me" "block"
       When I click on "dd.module div.toggle" "css_element" in the "Grade Me" "block"
+      And I wait "1" seconds
       Then I should see "Janie Doe" in the "Grade Me" "block"
       Then I should see "Kevin Smith" in the "Grade Me" "block"
       Then I should see "Jill Green" in the "Grade Me" "block"
@@ -169,6 +173,7 @@ Feature: Assignments are displayed in the block
       Then I should see "C1" in the "Grade Me" "block"
       And I should see "Assign" in the "Grade Me" "block"
       When I click on "dd.module div.toggle" "css_element" in the "Grade Me" "block"
+      And I wait "1" seconds
       Then I should see "Kevin Smith" in the "Grade Me" "block"
       Then I should see "Jill Green" in the "Grade Me" "block"
       And "//dd[@class='module']" "xpath_element" should exist in the "Grade Me" "block"
@@ -182,6 +187,7 @@ Feature: Assignments are displayed in the block
       Then I should see "C1" in the "Grade Me" "block"
       And I should see "Assign" in the "Grade Me" "block"
       When I click on "dd.module div.toggle" "css_element" in the "Grade Me" "block"
+      And I wait "1" seconds
       Then I should see "Jill Green" in the "Grade Me" "block"
       And "//dd[@class='module']" "xpath_element" should exist in the "Grade Me" "block"
       And "//dd[@class='module']//ul" "xpath_element" should exist in the "Grade Me" "block"

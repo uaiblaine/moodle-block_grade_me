@@ -49,8 +49,8 @@ Feature: Reset task works.
           | Question text | Third question |
           | Default mark  | 2.0 |
         And the following "activities" exist:
-          | activity | course | idnumber | name | intro                   | assignsubmission_onlinetext_enabled | assignsubmission_onlinetext_wordlimit_enabled | assignsubmission_onlinetext_wordlimit | assignsubmission_file_enabled |
-          | assign   | C2     | assign1  | Assign | Submit your online text | 1                                   | 1                                             | 10                                    | 0                             |
+          | activity | course | idnumber | name | intro                   | submissiondrafts | assignsubmission_onlinetext_enabled | assignsubmission_onlinetext_wordlimit_enabled | assignsubmission_onlinetext_wordlimit | assignsubmission_file_enabled |
+          | assign   | C2     | assign1  | Assign | Submit your online text | 0                | 1                                   | 1                                             | 10                                    | 0                             |
         And I log out
         # Submit the quiz as the first user.
         And I log in as "student1"
