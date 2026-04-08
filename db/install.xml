@@ -28,7 +28,6 @@
         <INDEX NAME="itemsortorder" UNIQUE="false" FIELDS="itemsortorder" PREVIOUS="courseid-itemmodule"/>
         <INDEX NAME="itemmodule" UNIQUE="false" FIELDS="itemmodule"/>
         <INDEX NAME="iteminstance" UNIQUE="false" FIELDS="iteminstance"/>
-
       </INDEXES>
     </TABLE>
     <TABLE NAME="block_grade_me_quiz_ngrade" COMMENT="Caches information about quizes needing grades.">
@@ -42,8 +41,10 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="userid-questionattemptstepid" />
-        <INDEX NAME="userid-questionattemptstepid" UNIQUE="false" FIELDS="userid, questionattemptstepid"/>
       </KEYS>
+      <INDEXES>
+        <INDEX NAME="userid-questionattemptstepid" UNIQUE="false" FIELDS="userid, questionattemptstepid"/>
+      </INDEXES>
     </TABLE>
   </TABLES>
 </XMLDB>
