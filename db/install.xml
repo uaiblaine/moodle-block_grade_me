@@ -42,13 +42,12 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="userid-questionattemptstepid" />
-        <INDEX NAME="userid-questionattemptstepid" UNIQUE="false" FIELDS="userid, questionattemptstepid"/>
       </KEYS>
       <INDEXES>
+        <INDEX NAME="userid-questionattemptstepid" UNIQUE="false" FIELDS="userid, questionattemptstepid"/>
         <INDEX NAME="uq_attemptid_stepid" UNIQUE="true" FIELDS="attemptid, questionattemptstepid"/>
         <INDEX NAME="idx_userid_quizid" UNIQUE="false" FIELDS="userid, quizid"/>
       </INDEXES>
     </TABLE>
   </TABLES>
 </XMLDB>
-
