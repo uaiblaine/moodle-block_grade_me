@@ -95,16 +95,20 @@ class block_grade_me extends block_base {
         }
 
         if (!empty($skeletoncourses)) {
+            $payload = [
+                'courses'       => $skeletoncourses,
+                'maxcourses'    => $maxcourses,
+                'excessmessage' => $excessmessage,
+            ];
             $this->content->text = $OUTPUT->render_from_template('block_grade_me/block_skeleton', [
                 'excessmessage' => $excessmessage,
+                // Embed the skeleton payload inside the block markup so the AMD
+                // module can self-initialise. js_call_amd() from get_content()
+                // can race the page-footer flush in some 4.x layouts, leaving
+                // the bootstrap script missing from the page; reading the JSON
+                // from the DOM avoids that timing problem entirely.
+                'datajson' => json_encode($payload, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT),
             ]);
-            if (!empty($this->page) && !empty($this->page->requires)) {
-                $this->page->requires->js_call_amd('block_grade_me/grademe', 'init', [[
-                    'courses'       => $skeletoncourses,
-                    'maxcourses'    => $maxcourses,
-                    'excessmessage' => $excessmessage,
-                ]]);
-            }
             return $this->content;
         }
 

@@ -18,15 +18,18 @@
     @template block_grade_me/block_skeleton
 
     Empty skeleton rendered by the block server-side. The amd/src/grademe.js
-    module populates the course/module rows and badge counts after page load.
+    module reads the JSON payload from the <script id="grademe-skeleton-data">
+    tag and populates the course/module rows + badge counts after page load.
 
     Context variables required for this template:
     * excessmessage  string  Localised "more courses are available" tail message
                              (empty when there is no overflow).
+    * datajson       string  JSON-encoded payload for the AMD module.
 
     Example context (json):
     {
-        "excessmessage": ""
+        "excessmessage": "",
+        "datajson": "{\"courses\":[],\"maxcourses\":10,\"excessmessage\":\"\"}"
     }
 }}
 <div id="grademe-block-container" class="block_grade_me-skeleton">
@@ -38,4 +41,17 @@
     </button>
     <dl id="grademe-courses-list" aria-busy="true"></dl>
     <div class="excess" id="grademe-excess">{{excessmessage}}</div>
+    <script type="application/json" id="grademe-skeleton-data">{{{datajson}}}</script>
 </div>
+{{#js}}
+require(['block_grade_me/grademe'], function(grademe) {
+    var el = document.getElementById('grademe-skeleton-data');
+    if (el) {
+        try {
+            grademe.init(JSON.parse(el.textContent));
+        } catch (e) {
+            window.console && window.console.error('block_grade_me: failed to parse skeleton data', e);
+        }
+    }
+});
+{{/js}}
