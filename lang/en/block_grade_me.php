@@ -55,6 +55,10 @@ $string['grade_me:addinstance'] = 'Add a new Grade Me block';
 $string['grade_me:myaddinstance'] = 'Add a new Grade Me block to the My Moodle page';
 $string['expand'] = 'Collapse / Expand All';
 
+$string['badge_loading'] = 'Loading ungraded count…';
+$string['badge_unknown'] = 'Count unavailable';
+$string['ws_get_gradeable_count'] = 'Count and list ungraded items for one module type in a course.';
+
 $string['grade_me_tools'] = 'Tools';
 $string['grade_me_tools_desc'] = '<p><a href="{$a}/blocks/grade_me/quiz_update_ngrade.php">Refresh quiz attempts needing grading</a></p>';
 

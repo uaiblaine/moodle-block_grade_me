@@ -44,3 +44,7 @@ $string['settings_enablepre'] = 'Mostrar';
 $string['settings_configenablepre'] = '¿Debería el bloque Califícame mostrar actividades sin evaluar del módulo "{$a->plugin_name}" ?';
 $string['grade_me:addinstance'] = 'Añadir un nuevo bloque Califícame';
 $string['grade_me:myaddinstance'] = 'Añadir un nuevo bloque Califícame a mi página personal';
+
+$string['badge_loading'] = 'Cargando recuento de pendientes…';
+$string['badge_unknown'] = 'Recuento no disponible';
+$string['ws_get_gradeable_count'] = 'Cuenta y lista los elementos pendientes de calificar para un tipo de módulo en un curso.';

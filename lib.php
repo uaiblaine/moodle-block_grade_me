@@ -23,20 +23,6 @@
  */
 
 /**
- * Returns CSV values from provided array
- * @param array $array The array to implode
- * @return string $string
- */
-function block_grade_me_array2str($array) {
-    if (count($array)) {
-        $string = implode(',', $array);
-    } else {
-        $string = null;
-    }
-    return $string;
-}
-
-/**
  * Returns first portion of the SQL query for the Grade Me block
  *
  * @return string $query
@@ -89,158 +75,101 @@ function block_grade_me_enabled_plugins() {
 }
 
 /**
- * Returns CSV values from provided array
- * @param object $r The query result to parse
- * @return array $gradeables
+ * Build the URL that opens the grading screen for a single submission, or — when
+ * $submissionid is 0 — the module-level grading overview.
+ *
+ * @param string $moduletype Activity module name (assign, quiz, forum, ...).
+ * @param int $cmid Course module id.
+ * @param int $userid User id of the submitter (only used by some module types).
+ * @param int $submissionid Submission id (0 → module-level link).
+ * @param int|null $forumdiscussionid Forum discussion id (only used for forum).
+ * @return string Absolute URL.
  */
-function block_grade_me_array($gradeables, $r) {
-    $gradeables['meta']['courseid'] = $r->courseid;
-    $gradeables['meta']['coursename'] = $r->coursename;
-    $gradeables[$r->itemsortorder]['meta']['iteminstance'] = $r->iteminstance;
-    $gradeables[$r->itemsortorder]['meta']['itemmodule'] = $r->itemmodule;
-    $gradeables[$r->itemsortorder]['meta']['itemname'] = $r->itemname;
-    $gradeables[$r->itemsortorder]['meta']['coursemoduleid'] = $r->coursemoduleid;
-    $gradeables[$r->itemsortorder][$r->timesubmitted]['meta']['userid'] = $r->userid;
-    $gradeables[$r->itemsortorder][$r->timesubmitted]['meta']['submissionid'] = $r->submissionid;
-    if (isset($r->forum_discussion_id)) {
-        $gradeables[$r->itemsortorder][$r->timesubmitted]['meta']['forum_discussion_id'] = $r->forum_discussion_id;
+function block_grade_me_build_gradelink(string $moduletype, int $cmid, int $userid = 0,
+        int $submissionid = 0, ?int $forumdiscussionid = null): string {
+    global $CFG;
+
+    if ($submissionid === 0) {
+        if ($moduletype === 'quiz') {
+            return $CFG->wwwroot . '/mod/quiz/report.php?id=' . $cmid;
+        }
+        if ($moduletype === 'assign') {
+            return $CFG->wwwroot . '/mod/assign/view.php?id=' . $cmid . '&action=grade';
+        }
+        return $CFG->wwwroot . '/mod/' . $moduletype . '/view.php?id=' . $cmid;
     }
-    return($gradeables);
+
+    switch ($moduletype) {
+        case 'assign':
+            return $CFG->wwwroot . '/mod/assign/view.php?id=' . $cmid . '&action=grade&userid=' . $userid;
+        case 'data':
+            return $CFG->wwwroot . '/mod/data/view.php?rid=' . $submissionid . '&mode=single';
+        case 'forum':
+            return $CFG->wwwroot . '/mod/forum/discuss.php?d=' . ((int) $forumdiscussionid) . '#p' . $submissionid;
+        case 'glossary':
+            return $CFG->wwwroot . '/mod/glossary/view.php?id=' . $cmid . '#postrating' . $submissionid;
+        case 'quiz':
+            return $CFG->wwwroot . '/mod/quiz/review.php?attempt=' . $submissionid;
+        case 'lesson':
+            return $CFG->wwwroot . '/mod/lesson/essay.php?id=' . $cmid . '&mode=grade&attemptid='
+                . $submissionid . '&sesskey=' . sesskey();
+        default:
+            return $CFG->wwwroot . '/mod/' . $moduletype . '/view.php?id=' . $cmid;
+    }
 }
 
 /**
- * Construct the tree of ungraded items
- * @param array $course The array of ungraded items for a specific course
- * @param array $usercache Preloaded user records keyed by userid (optional, for batch loading)
- * @return string $text
+ * Enumerate cached gradeable items for one course, restricted to the module
+ * types that are enabled AND that the current user has the corresponding
+ * grading capability for in the given context.
+ *
+ * Returns a list of per-moduletype groups; each group carries the cmid + name
+ * + module-level URLs needed to render the skeleton synchronously.
+ *
+ * @param int $courseid
+ * @param array $enabledplugins Output of block_grade_me_enabled_plugins().
+ * @param context_course $context
+ * @return array [['moduletype' => 'assign', 'instances' => [['cmid'=>..,'itemname'=>..,'moduleurl'=>..,'gradeurl'=>..], ...]], ...]
  */
-function block_grade_me_tree($course, array $usercache = []) {
-    global $CFG, $DB, $OUTPUT, $SESSION;
+function block_grade_me_enumerate_skeleton(int $courseid, array $enabledplugins, context_course $context): array {
+    global $CFG, $DB;
 
-    // Get time format string.
-    $datetimestring = get_string('datetime', 'block_grade_me', []);
-    // Grading image.
-    $gradeimg = $CFG->wwwroot . '/blocks/grade_me/pix/check_mark.png';
-    // Define text variable.
-    $text = '';
-
-    $courseid = $course['meta']['courseid'];
-    $coursename = $course['meta']['coursename'];
-    unset($course['meta']);
-
-    $gradebooklink = $CFG->wwwroot . '/grade/report/index.php?id=' . $courseid . '" title="' .
-        get_string('link_gradebook_icon', 'block_grade_me', ['course_name' => $coursename]);
-    $altgradebook = get_string('alt_gradebook', 'block_grade_me', ['course_name' => $coursename]);
-    $gradebookicon = $OUTPUT->pix_icon('i/grades', $altgradebook, null, ['class' => 'gm_icon']);
-    $courselink = $CFG->wwwroot . '/course/view.php?id=' . $courseid;
-    $coursetitle = get_string('link_gradebook', 'block_grade_me', ['course_name' => $coursename]);
-    $text .= '<div><dt id="courseid' . $courseid . '" class="cmod">
-                <div tabindex=0 class="toggle open fa fa-caret-right" aria-hidden="true"
-                    onclick="$(\'dt#courseid' . $courseid . ' > div.toggle\')
-                    .toggleClass(\'open\');$(\'dt#courseid' . $courseid . ' ~ dd\')
-                    .toggleClass(\'block_grade_me_hide\');">
-                        <span class="sr-only">Toggle Section</span>
-                </div>
-                <a href="' . $courselink . '" class="grademe-course-name"' . $coursetitle . '">' . $coursename . '</a>
-              </dt>' . "\n";
-    $text .= "\n";
-
-    ksort($course);
-
-    foreach ($course as $item) {
-        $itemmodule = $item['meta']['itemmodule'];
-        $itemname = $item['meta']['itemname'];
-        $coursemoduleid = $item['meta']['coursemoduleid'];
-        unset($item['meta']);
-
-        $modulelink = $CFG->wwwroot . '/mod/' . $itemmodule . '/view.php?id=' . $coursemoduleid;
-        $gradelink = $CFG->wwwroot;
-        if ($itemmodule == 'quiz') {
-            $gradelink .= '/mod/quiz/report.php?id=' . $coursemoduleid;
-        } else {
-            $gradelink = $modulelink;
+    $allowedtypes = [];
+    foreach ($enabledplugins as $moduletype => $info) {
+        if (!empty($info['capability']) && has_capability($info['capability'], $context)) {
+            $allowedtypes[] = $moduletype;
         }
-        $moduletitle = get_string('link_mod', 'block_grade_me', ['mod_name' => $itemmodule]);
-        $moduleicon = $OUTPUT->pix_icon('icon', $moduletitle, $itemmodule, ['class' => 'gm_icon']);
-
-        $text .= '<dd id="cmid' . $coursemoduleid . '" class="module">' . "\n";  // Open module.
-        $text .= '<div class="dd-wrap">' . "\n";
-        $text .= '<div tabindex=0 class="toggle fa fa-caret-right" aria-hidden="true"
-                    onclick="$(\'dd#cmid' . $coursemoduleid . ' > div div.toggle\')
-                    .toggleClass(\'open\');$(\'dd#cmid' . $coursemoduleid . ' > ul\')
-                    .toggleClass(\'block_grade_me_hide\');">
-                        <span class="sr-only">Toggle Section</span>
-                    </div>' . "\n";
-        $text .= '<a href="' . $gradelink . '" class="grademe-course-icon" title="'
-                 . $moduletitle . '">' . $moduleicon . '</a>' . "\n";
-        $text .= '<a href="' . $modulelink . '" class="grademe-mod-name" title="' . $moduletitle . '">' . $itemname . '</a>' . "\n";
-        $text .= '<span class="badge badge-pill badge-primary">' . count($item) . '</span>' . "\n";
-        $text .= '</div>' . "\n";
-        $text .= '<ul class="gradable-list block_grade_me_hide">' . "\n";
-
-        ksort($item);
-
-        foreach ($item as $l3 => $submission) {
-            $timesubmitted = $l3;
-            $userid = $submission['meta']['userid'];
-            $submissionid = $submission['meta']['submissionid'];
-
-            $submissionlink = $CFG->wwwroot;
-            if ($itemmodule == 'assign') {
-                $submissionlink .= "/mod/assign/view.php?id=$coursemoduleid&action=grade&userid=$userid";
-            } else if ($itemmodule == 'data') {
-                $submissionlink .= '/mod/data/view.php?rid=' . $submissionid . '&amp;mode=single';
-            } else if ($itemmodule == 'forum') {
-                $forumdiscussionid = $submission['meta']['forum_discussion_id'];
-                $submissionlink .= '/mod/forum/discuss.php?d=' . $forumdiscussionid . '#p' . $submissionid;
-            } else if ($itemmodule == 'glossary') {
-                $submissionlink .= '/mod/glossary/view.php?id=' . $coursemoduleid . '#postrating' . $submissionid;
-            } else if ($itemmodule == 'quiz') {
-                $submissionlink .= '/mod/quiz/review.php?attempt=' . $submissionid;
-            } else if ($itemmodule == 'lesson') {
-                $submissionlink .= '/mod/lesson/essay.php?id=' . $coursemoduleid . '&mode=grade&attemptid='
-                                   . $submissionid . '&sesskey=' . sesskey();
-            }
-
-            unset($submission['meta']);
-
-            $submissiontitle = get_string('link_grade_img', 'block_grade_me', []);
-            $altmark = get_string('alt_mark', 'block_grade_me', []);
-
-            // Use preloaded user cache instead of per-submission DB query.
-            if (isset($usercache[$userid])) {
-                $user = $usercache[$userid];
-            } else {
-                // Fallback for safety (e.g. direct calls without cache).
-                $user = $DB->get_record('user', ['id' => $userid]);
-            }
-
-            $userfirst = $user->firstname;
-            $userfirstlast = $user->firstname . ' ' . $user->lastname;
-            $userprofiletitle = get_string('link_user_profile', 'block_grade_me', ['first_name' => $userfirst]);
-
-            $text .= '<li class="gradable">';  // Open gradable.
-            $text .= '<a class="gradable-icon" href="' . $submissionlink . '" title="' . $submissiontitle . '">
-                        <i class="fa fa-check" aria-hidden="true"></i>
-                        <span class="sr-only">' . $submissiontitle . '</span>
-                      </a>';
-            $text .= '<div class="gradable-wrap">';
-            $text .= '<a class="gradable-user" href="' . $CFG->wwwroot . '/user/view.php?id=' . $userid
-                     . '&amp;course=' . $courseid . '" title="' . $userprofiletitle . '">';
-            $text .= $userfirstlast;
-            $text .= '</a>';
-            $text .= '<div class="gradable-date">' . userdate($timesubmitted, $datetimestring) . '</div>';
-            $text .= '</div>';
-            $text .= '</li>' . "\n";  // End gradable.
-        }
-
-        $text .= '</ul>' . "\n";
-        $text .= '</dd>' . "\n";  // Close module.
+    }
+    if (empty($allowedtypes)) {
+        return [];
     }
 
-    $text .= '</div>' . "\n";
+    [$insql, $inparams] = $DB->get_in_or_equal($allowedtypes, SQL_PARAMS_NAMED, 'bgm_mt_');
+    $params = array_merge($inparams, ['courseid' => $courseid]);
+    $sql = "SELECT bgm.id, bgm.itemmodule, bgm.itemname, bgm.iteminstance, bgm.coursemoduleid, bgm.itemsortorder
+              FROM {block_grade_me} bgm
+             WHERE bgm.courseid = :courseid
+               AND bgm.itemmodule $insql
+          ORDER BY bgm.itemmodule, bgm.itemsortorder, bgm.coursemoduleid";
 
-    return $text;
+    $groups = [];
+    $rs = $DB->get_recordset_sql($sql, $params);
+    foreach ($rs as $r) {
+        $mt = $r->itemmodule;
+        if (!isset($groups[$mt])) {
+            $groups[$mt] = ['moduletype' => $mt, 'instances' => []];
+        }
+        $cmid = (int) $r->coursemoduleid;
+        $groups[$mt]['instances'][] = [
+            'cmid'      => $cmid,
+            'itemname'  => (string) $r->itemname,
+            'moduleurl' => $CFG->wwwroot . '/mod/' . $mt . '/view.php?id=' . $cmid,
+            'gradeurl'  => block_grade_me_build_gradelink($mt, $cmid),
+        ];
+    }
+    $rs->close();
+
+    return array_values($groups);
 }
 // Reset table cron function.
 /**

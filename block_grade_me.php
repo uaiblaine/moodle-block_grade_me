@@ -42,19 +42,14 @@ class block_grade_me extends block_base {
      * @return stdClass The content being rendered for this block
      */
     public function get_content() {
-        global $CFG, $USER, $COURSE, $DB, $OUTPUT;
+        global $CFG, $USER, $COURSE, $OUTPUT;
 
         if ($this->content !== null) {
             return $this->content;
         }
 
         require_once($CFG->dirroot . '/blocks/grade_me/lib.php');
-        if (!empty($this->page) && !empty($this->page->requires)) {
-            $this->page->requires->jquery();
-            $this->page->requires->js('/blocks/grade_me/javascript/grademe.js');
-        }
 
-        // Create the content class.
         $this->content = new stdClass();
         $this->content->text = '';
         $this->content->footer = '';
@@ -63,126 +58,68 @@ class block_grade_me extends block_base {
             return $this->content;
         }
 
-        // Setup arrays.
-        $gradeables = [];
-
-        $groups = null;
-
         $enabledplugins = block_grade_me_enabled_plugins();
-
-        $maxcourses = (isset($CFG->block_grade_me_maxcourses)) ? $CFG->block_grade_me_maxcourses : 10;
-        $coursecount = 0;
-        $additional = null;
+        $maxcourses = isset($CFG->block_grade_me_maxcourses) ? (int) $CFG->block_grade_me_maxcourses : 10;
 
         if ($COURSE->id == SITEID) {
-            if (is_siteadmin() && $CFG->block_grade_me_enableadminviewall) {
+            if (is_siteadmin() && !empty($CFG->block_grade_me_enableadminviewall)) {
                 $courses = get_courses();
             } else {
                 $courses = enrol_get_my_courses();
             }
         } else {
-            $courses[$COURSE->id] = $COURSE;
+            $courses = [$COURSE->id => $COURSE];
         }
 
+        $skeletoncourses = [];
+        $excessmessage = '';
         foreach ($courses as $courseid => $course) {
-            unset($params);
-            $gradeables = [];
+            if ($courseid == SITEID) {
+                continue;
+            }
             $context = context_course::instance($courseid);
-
-            // Map each plugin to the userid column it filters on.
-            // This is needed because each plugin's query references a different table alias.
-            $pluginuseridcolumns = [
-                'assign'   => 'asgn_sub.userid',
-                'quiz'     => 'bneeds.userid',
-                'forum'    => 'fp.userid',
-                'data'     => 'dr.userid',
-                'glossary' => 'ge.userid',
-                'lesson'   => 'la.userid',
+            $moduletypes = block_grade_me_enumerate_skeleton($courseid, $enabledplugins, $context);
+            if (empty($moduletypes)) {
+                continue;
+            }
+            if (count($skeletoncourses) >= $maxcourses) {
+                $excessmessage = get_string('excess', 'block_grade_me', ['maxcourses' => $maxcourses]);
+                break;
+            }
+            $skeletoncourses[] = [
+                'courseid'    => (int) $courseid,
+                'coursename'  => format_string($course->shortname ?? $course->fullname ?? ''),
+                'courseurl'   => $CFG->wwwroot . '/course/view.php?id=' . (int) $courseid,
+                'moduletypes' => $moduletypes,
             ];
-
-            $params['courseid'] = $courseid;
-
-            foreach ($enabledplugins as $plugin => $a) {
-                if (has_capability($a['capability'], $context)) {
-                    $useridcol = $pluginuseridcolumns[$plugin] ?? 'userid';
-                    [$usersql, $userparams] = \block_grade_me\db_helper::get_gradebook_users_sql(
-                        $useridcol,
-                        $courseid,
-                        $context,
-                        $USER->id,
-                        $course
-                    );
-
-                    $fn = 'block_grade_me_query_' . $plugin;
-                    $pluginfn = $fn($usersql, $userparams);
-                    if ($pluginfn !== false) {
-                        [$sql, $inparams] = $fn($usersql, $userparams);
-                        $query = block_grade_me_query_prefix() . $sql . block_grade_me_query_suffix($plugin);
-                        $values = array_merge($inparams, $params);
-                        $rs = $DB->get_recordset_sql($query, $values);
-
-                        foreach ($rs as $r) {
-                            $gradeables = block_grade_me_array($gradeables, $r);
-                        }
-                    }
-                }
-            }
-            if (count($gradeables) > 0) {
-                $coursecount++;
-                if ($coursecount > $maxcourses) {
-                    $additional = get_string('excess', 'block_grade_me', ['maxcourses' => $maxcourses]);
-                    break 1;
-                } else {
-                    ksort($gradeables);
-
-                    // Batch-load all user records for this course's gradeables
-                    // in a single query instead of N+1 individual lookups.
-                    $userids = [];
-                    foreach ($gradeables as $key => $item) {
-                        if ($key === 'meta') {
-                            continue;
-                        }
-                        foreach ($item as $subkey => $submission) {
-                            if ($subkey === 'meta') {
-                                continue;
-                            }
-                            if (isset($submission['meta']['userid'])) {
-                                $userids[$submission['meta']['userid']] = true;
-                            }
-                        }
-                    }
-                    $usercache = [];
-                    if (!empty($userids)) {
-                        $usercache = $DB->get_records_list('user', 'id', array_keys($userids), '', 'id,firstname,lastname');
-                    }
-
-                    $this->content->text .= block_grade_me_tree($gradeables, $usercache);
-                }
-            }
-            unset($gradeables);
         }
 
+        if (!empty($skeletoncourses)) {
+            $this->content->text = $OUTPUT->render_from_template('block_grade_me/block_skeleton', [
+                'excessmessage' => $excessmessage,
+            ]);
+            if (!empty($this->page) && !empty($this->page->requires)) {
+                $this->page->requires->js_call_amd('block_grade_me/grademe', 'init', [[
+                    'courses'       => $skeletoncourses,
+                    'maxcourses'    => $maxcourses,
+                    'excessmessage' => $excessmessage,
+                ]]);
+            }
+            return $this->content;
+        }
+
+        // No gradeables — show the "nothing to grade" message if the user is a grader anywhere.
         $graderroles = [];
         foreach ($enabledplugins as $plugin => $a) {
             foreach (array_keys(get_roles_with_capability($a['capability'])) as $role) {
                 $graderroles[$role] = true;
             }
         }
-        $showempty = false;
         foreach ($graderroles as $roleid => $value) {
             if (user_has_role_assignment($USER->id, $roleid) || is_siteadmin()) {
-                $showempty = true;
+                $this->content->text = '<div class="excess">' . get_string('nothing', 'block_grade_me') . '</div>' . "\n";
+                break;
             }
-        }
-
-        if (!empty($this->content->text)) {
-             // Expand/Collapse button.
-             $expand = '<button class="btn btn-sm btn-outline-secondary" type="button" onclick="togglecollapseall();">' .
-                get_string('expand', 'block_grade_me') . '</button>';
-
-            $this->content->text = $expand . '<dl>' . $this->content->text . '</dl><div class="excess">' . $additional . '</div>';
-        } else if (empty($this->content->text) && $showempty) {
-            $this->content->text .= '<div class="excess">' . get_string('nothing', 'block_grade_me') . '</div>' . "\n";
         }
 
         return $this->content;

@@ -15,19 +15,22 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Grade Me block
+ * Grade Me block external web service function declarations.
  *
- * @package   block_grade_me
- * @copyright 2012 Dakota Duff
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    block_grade_me
+ * @copyright  2026 block_grade_me contributors
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2026051400;
-$plugin->requires = 2022112800;
-$plugin->cron = 3600;
-$plugin->component = 'block_grade_me';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->supported = [405, 502];
-$plugin->release = '4.4.0.0';
+$functions = [
+    'block_grade_me_get_gradeable_count' => [
+        'classname'    => 'block_grade_me\\external\\get_gradeable_count',
+        'methodname'   => 'execute',
+        'description'  => 'Count and list ungraded items for one module type in a course.',
+        'type'         => 'read',
+        'ajax'         => true,
+        'capabilities' => 'mod/assign:grade,mod/quiz:grade,mod/forum:rate,mod/glossary:rate,mod/data:rate,mod/lesson:grade',
+    ],
+];

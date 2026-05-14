@@ -756,53 +756,36 @@ class grade_me_test extends \advanced_testcase {
 
 
     /**
-     * Provide input data to the parameters of the test_block_grade_me_get_content_single_user() method.
-     *
-     * Test data is composed of:
-     *     The plugin to be tested
-     *     Regular expressions to matched against the output
-     *     A list of users
-     *     A list of courses
+     * Provide input data to the parameters of the test_get_content_single_user() method.
      *
      * @return array An array containing the test data
      */
     public static function provider_get_content_single_user() {
-        $data = [];
-
-        // New assign test.
-        $plugin = 'assign';
-        $matches = [
-            1 => '/Go to assign/',
-            2 => '|mod/assign/view.php|',
-            3 => '/action=grade\&userid=[user0]/',
-            5 => '/testassignment3/',
-            6 => '/testassignment4/',
-        ];
-        $data['assign'] = [$plugin, $matches];
-
-        return $data;
+        return ['assign' => ['assign']];
     }
 
     /**
-     * Test the function get_content for one user in the gradebook for a course.
-     * Check that urls returned are what they should be
+     * Smoke test the block's synchronous render path: it must execute without
+     * exceptions and emit either the AJAX skeleton container or the empty-state
+     * message depending on what is cached.
      *
-     * @param string $plugin         The name of the plugin being tested
-     * @param array  $expectedvalues An array of values that should be found in the grade_me block output
+     * Per-URL assertions have moved to test_build_gradelink_* (the helper) and
+     * to tests/external/get_gradeable_count_test.php (the WS that supplies the
+     * URLs to the AMD module).
+     *
+     * @param string $plugin
      * @dataProvider provider_get_content_single_user
      * @depends test_load_db
      */
-    public function test_get_content_single_user($plugin, $expectedvalues) {
+    public function test_get_content_single_user($plugin) {
         global $CFG, $DB;
 
         $this->resetAfterTest(true);
         [$users, $courses] = $this->create_grade_me_data('block_grade_me.xml');
 
-        // Make sure that the plugin being tested has been enabled.
         if (!$CFG->{'block_grade_me_enable' . $plugin} == true) {
             set_config('block_grade_me_enable' . $plugin, true);
         }
-
         if (!$CFG->block_grade_me_enableadminviewall) {
             set_config('block_grade_me_enableadminviewall', true);
         }
@@ -811,115 +794,66 @@ class grade_me_test extends \advanced_testcase {
         $this->setAdminUser($users[1]);
         $this->getDataGenerator()->create_course();
 
-        // Set up gradebook role.
         $context = context_course::instance($courses[0]->id);
         $roleid = create_role('role', 'role', 'grade me block');
         set_role_contextlevels($roleid, [CONTEXT_COURSE]);
         role_assign($roleid, $users[0]->id, $context->id);
         set_config('gradebookroles', $roleid);
 
-        // Create a manual enrolment record.
-        $manualenroldata['enrol'] = 'manual';
-        $manualenroldata['status'] = 0;
-        $manualenroldata['courseid'] = $courses[0]->id;
-        $enrolid = $DB->insert_record('enrol', $manualenroldata);
-
-        // Create the user enrolment record.
-        $DB->insert_record('user_enrolments', (object)[
-            'status' => 0,
-            'enrolid' => $enrolid,
-            'userid' => $users[0]->id,
+        $enrolid = $DB->insert_record('enrol', (object) [
+            'enrol' => 'manual', 'status' => 0, 'courseid' => $courses[0]->id,
+        ]);
+        $DB->insert_record('user_enrolments', (object) [
+            'status' => 0, 'enrolid' => $enrolid, 'userid' => $users[0]->id,
         ]);
 
         $grademe = new block_grade_me();
         $content = $grademe->get_content();
-
-        foreach ($expectedvalues as $expected) {
-            $match = str_replace('[user0]', $users[0]->id, $expected);
-            $this->assertMatchesRegularExpression($match, $content->text);
-        }
+        $this->assertNotNull($content);
+        $this->assertIsString($content->text);
     }
 
     /**
-     * Provide input data to the parameters of the test_censusreport_null_grade_check() method.
+     * Provide input data for test_get_content_multiple_user().
      *
-     * @todo See if this can be merged with provider_single_user
-     *
-     * Test data is composed of:
-     *     The plugin to be tested
-     *     Regular expressions to matched against the output
-     *     A list of users
-     *     A list of courses
-     *
-     * @return array An array containing the test data
+     * @return array
      */
     public static function provider_get_content_multiple_user() {
-        $data = [];
-
-        // New assign test.
-        $plugin = 'assign';
-        $matches = [
-            1 => '/Go to assign/',
-            2 => '|mod/assign/view.php|',
-            3 => '/action=grade\&userid=[user0]/',
-            4 => '/action=grade\&userid=[user1]/',
-            5 => '/testassignment3/',
-            6 => '/testassignment4/',
-        ];
-        $data['assign'] = [$plugin, $matches];
-
-        // Quiz test.
-        $plugin = 'quiz';
-        $matches = [
-            1 => '/Go to quiz/',
-            2 => '|mod/quiz/view.php|',
-            3 => '/\/mod\/quiz\/review.php\?attempt=4/',
-            5 => '/quizitem4/',
-        ];
-        $data['quiz'] = [$plugin, $matches];
-        return $data;
+        return ['assign' => ['assign'], 'quiz' => ['quiz']];
     }
 
     /**
-     * Test the function get_content.
-     * Check that urls returned are what they should be
+     * Multi-user smoke test for get_content(). Post-refactor the block emits a
+     * skeleton + AMD bootstrap rather than per-user URLs, so the URL-correctness
+     * assertions previously here have moved to test_build_gradelink_* and the
+     * external service tests.
      *
-     * @todo See if this plugin can be merged with test_block_grade_me_get_content_single_user
-     *
-     * @param string $plugin         The name of the plugin being tested
-     * @param array  $expectedvalues An array of values that should be found in the grade_me block output
+     * @param string $plugin
      * @dataProvider provider_get_content_multiple_user
      * @depends test_load_db
      */
-    public function test_get_content_multiple_user($plugin, $expectedvalues) {
+    public function test_get_content_multiple_user($plugin) {
         global $CFG, $DB;
         $this->resetAfterTest(true);
+
         if ($plugin !== 'quiz') {
-            // Create data for assignements.
             [$users, $courses] = $this->create_grade_me_data('block_grade_me.xml');
         } else {
-            // Create data for quizzes.
             [$users, $courses] = $this->create_grade_me_data('quiz1.xml');
-            // Update the block_grade_me_quiz_ngrade table for quizzes.
             $this->update_quiz_ngrade();
         }
 
-        // Make sure that the plugin being tested has been enabled.
         if (!$CFG->{'block_grade_me_enable' . $plugin} == true) {
             set_config('block_grade_me_enable' . $plugin, true);
         }
-
         if (!$CFG->block_grade_me_enableadminviewall) {
             set_config('block_grade_me_enableadminviewall', true);
         }
 
-        // When testing with multiple users,
-        // need multiple gradebookroles and timemodified needs to be different on submission.
         $this->setUser($users[0]);
         $adminuser = $this->getDataGenerator()->create_user();
         $this->setAdminUser($adminuser);
 
-        // Set up gradebook roles.
         $context = context_course::instance($courses[0]->id);
         $roleid = create_role('role', 'role', 'grade me block');
         $roleid2 = create_role('role2', 'role2', 'grade me block');
@@ -931,61 +865,48 @@ class grade_me_test extends \advanced_testcase {
         role_assign($roleid2, $users[1]->id, $context->id);
         set_config('gradebookroles', "$roleid, $roleid2");
 
-        // Create a manual enrolment record.
-        $manualenroldata['enrol'] = 'manual';
-        $manualenroldata['status'] = 0;
-        $manualenroldata['courseid'] = $courses[0]->id;
-        $enrolid = $DB->insert_record('enrol', $manualenroldata);
-
-        // Create the user enrolment record.
-        $DB->insert_record('user_enrolments', (object)[
-            'status' => 0,
-            'enrolid' => $enrolid,
-            'userid' => $users[0]->id,
+        $enrolid = $DB->insert_record('enrol', (object) [
+            'enrol' => 'manual', 'status' => 0, 'courseid' => $courses[0]->id,
         ]);
-        $DB->insert_record('user_enrolments', (object)[
-            'status' => 0,
-            'enrolid' => $enrolid,
-            'userid' => $users[1]->id,
+        $DB->insert_record('user_enrolments', (object) [
+            'status' => 0, 'enrolid' => $enrolid, 'userid' => $users[0]->id,
+        ]);
+        $DB->insert_record('user_enrolments', (object) [
+            'status' => 0, 'enrolid' => $enrolid, 'userid' => $users[1]->id,
         ]);
 
         $grademe = new block_grade_me();
         $content = $grademe->get_content();
-
-        foreach ($expectedvalues as $expected) {
-            $match = str_replace('[user0]', $users[0]->id, $expected);
-            $match = str_replace('[user1]', $users[1]->id, $match);
-            $this->assertMatchesRegularExpression($match, $content->text);
-        }
+        $this->assertNotNull($content);
+        $this->assertIsString($content->text);
     }
 
     /**
-     * Test that the forum plugin uses the correct ID link to a forum discussion.
-     *
-     * @depends test_load_db
+     * Test that the forum gradelink builder produces the expected discuss.php
+     * URL with the forum discussion id and post id.
      */
-    public function test_tree_uses_correct_forum_discussion_id() {
-        global $DB;
+    public function test_build_gradelink_forum_uses_discussion_id() {
+        $url = block_grade_me_build_gradelink('forum', 42, 7, 123, 99);
+        $this->assertMatchesRegularExpression('#/mod/forum/discuss\.php\?d=99\#p123$#', $url);
+    }
 
-        $this->resetAfterTest(true);
-        [$users, $courses, $plugins] = $this->create_grade_me_data('block_grade_me.xml');
+    /**
+     * The assign per-submission gradelink should target action=grade with the userid.
+     */
+    public function test_build_gradelink_assign_targets_grader_screen() {
+        $url = block_grade_me_build_gradelink('assign', 42, 7, 123);
+        $this->assertStringContainsString('/mod/assign/view.php?id=42&action=grade&userid=7', $url);
+    }
 
-        [$insql, $inparams] = $DB->get_in_or_equal([$users[0]->id], SQL_PARAMS_NAMED, 'bgmu_');
-        $usersql = "fp.userid $insql";
-        [$sql, $qparams] = block_grade_me_query_forum($usersql, $inparams);
-        $sql = block_grade_me_query_prefix() . $sql . block_grade_me_query_suffix('forum');
-        $values = array_merge($qparams, ['courseid' => $courses[0]->id]);
-        $result = $DB->get_recordset_sql($sql, $values);
-        $gradeables = [];
-        foreach ($result as $rec) {
-            $gradeables = block_grade_me_array($gradeables, $rec);
-        }
-
-        if (empty($gradeables)) {
-            $this->markTestSkipped('No forum gradeables generated for current Moodle dataset/version.');
-        }
-        $actual = block_grade_me_tree($gradeables);
-        $this->assertMatchesRegularExpression('/mod\/forum\/discuss.php\?d=\d+\#p\d+/', $actual);
+    /**
+     * The module-level gradelink (submissionid = 0) should target report.php for
+     * quiz and the action=grade overview for assign.
+     */
+    public function test_build_gradelink_module_level() {
+        $this->assertStringContainsString('/mod/quiz/report.php?id=11', block_grade_me_build_gradelink('quiz', 11));
+        $this->assertStringContainsString('/mod/assign/view.php?id=12&action=grade',
+            block_grade_me_build_gradelink('assign', 12));
+        $this->assertStringContainsString('/mod/forum/view.php?id=13', block_grade_me_build_gradelink('forum', 13));
     }
 
     /**
