@@ -88,7 +88,7 @@ class block_grade_me extends block_base {
             }
             $skeletoncourses[] = [
                 'courseid'    => (int) $courseid,
-                'coursename'  => format_string($course->shortname ?? $course->fullname ?? ''),
+                'coursename'  => format_string($course->fullname ?? $course->shortname ?? ''),
                 'courseurl'   => $CFG->wwwroot . '/course/view.php?id=' . (int) $courseid,
                 'moduletypes' => $moduletypes,
             ];
@@ -109,6 +109,12 @@ class block_grade_me extends block_base {
                 // from the DOM avoids that timing problem entirely.
                 'datajson' => json_encode($payload, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT),
             ]);
+            $this->content->footer =
+                '<small class="text-muted d-block block_grade_me-footer">'
+                . s(get_string('staledatanotice', 'block_grade_me'))
+                . ' <span class="grademe-lastsynced" data-lastsynced="0">'
+                . s(get_string('lastsynced_pending', 'block_grade_me'))
+                . '</span></small>';
             return $this->content;
         }
 

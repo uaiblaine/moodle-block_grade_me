@@ -25,8 +25,8 @@
 $string['pluginname'] = 'Califícame';
 $string['title'] = 'Califícame';
 $string['datetime'] = '%B %d, %l:%M %p';
-$string['excess'] = 'Hay más de {$a->maxcourses} cursos con trabajo sin evaluar.';
-$string['nothing'] = 'Nada que evaluar!';
+$string['excess'] = 'Más de {$a->maxcourses} cursos tienen elementos pendientes — mostrando los primeros {$a->maxcourses}.';
+$string['nothing'] = 'No hay elementos pendientes de calificar en tus cursos.';
 $string['link_gradebook_icon'] = 'Ir a calificaciones de {$a->course_name}…';
 $string['link_gradebook'] = 'Ir a {$a->course_name}…';
 $string['link_mod_img'] = 'Ir a {$a->mod_name} en calificaciones…';
@@ -48,3 +48,6 @@ $string['grade_me:myaddinstance'] = 'Añadir un nuevo bloque Califícame a mi p�
 $string['badge_loading'] = 'Cargando recuento de pendientes…';
 $string['badge_unknown'] = 'Recuento no disponible';
 $string['ws_get_gradeable_count'] = 'Cuenta y lista los elementos pendientes de calificar para un tipo de módulo en un curso.';
+$string['staledatanotice'] = 'Los recuentos se actualizan cada 15 minutos.';
+$string['lastsynced'] = 'Última sincronización: {$a->time}';
+$string['lastsynced_pending'] = 'Última sincronización: —';

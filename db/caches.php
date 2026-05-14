@@ -15,19 +15,22 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Grade Me block
+ * Cache definitions for the Grade Me block.
  *
- * @package   block_grade_me
- * @copyright 2012 Dakota Duff
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    block_grade_me
+ * @copyright  2026 block_grade_me contributors
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2026051401;
-$plugin->requires = 2022112800;
-$plugin->cron = 3600;
-$plugin->component = 'block_grade_me';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->supported = [405, 502];
-$plugin->release = '4.4.0.1';
+$definitions = [
+    // Per-user, per-(course, moduletype) cached WS response. 15-minute TTL —
+    // refreshed lazily on the next request after expiry.
+    'gradeable_count' => [
+        'mode'               => cache_store::MODE_SESSION,
+        'simpledata'         => false,
+        'ttl'                => 900,
+        'staticacceleration' => true,
+    ],
+];

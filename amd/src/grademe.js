@@ -34,6 +34,14 @@ const SPINNER_HTML =
 const DEBOUNCE_MS = 100;
 
 /**
+ * Most recent `lastsynced` timestamp seen across all WS responses for this
+ * page load. Used to populate the "Last synced" indicator in the footer.
+ *
+ * @type {number}
+ */
+let latestSync = 0;
+
+/**
  * Sleep helper used to debounce sequential requests within a course.
  *
  * @param {number} ms
@@ -71,7 +79,9 @@ const renderSkeleton = (list, data) => {
                  aria-expanded="true" data-action="grademe-toggle-course">
                 <span class="sr-only">Toggle Section</span>
             </div>
-            <a href="${esc(course.courseurl)}" class="grademe-course-name">${esc(course.coursename)}</a>
+            <a href="${esc(course.courseurl)}"
+               class="grademe-course-name"
+               title="${esc(course.coursename)}">${esc(course.coursename)}</a>
         `;
         wrap.appendChild(dt);
 
@@ -84,10 +94,6 @@ const renderSkeleton = (list, data) => {
                 dd.dataset.cmid = inst.cmid;
                 dd.innerHTML = `
                     <div class="dd-wrap">
-                        <div tabindex="0" role="button" class="toggle fa fa-caret-right"
-                             aria-expanded="false" data-action="grademe-toggle-module">
-                            <span class="sr-only">Toggle Section</span>
-                        </div>
                         <a href="${esc(inst.gradeurl)}" class="grademe-course-icon" title="${esc(inst.itemname)}">
                             <i class="fa fa-check-square-o" aria-hidden="true"></i>
                         </a>
@@ -100,7 +106,6 @@ const renderSkeleton = (list, data) => {
                               tabindex="0"
                               aria-busy="true">${SPINNER_HTML}</span>
                     </div>
-                    <ul class="gradable-list ${HIDE_CLASS}"></ul>
                 `;
                 wrap.appendChild(dd);
             }
@@ -131,7 +136,6 @@ const wireToggles = (root) => {
             list.classList.toggle('expanded', expand);
             root.querySelectorAll('.toggle').forEach((t) => t.classList.toggle('open', expand));
             root.querySelectorAll('dd').forEach((d) => d.classList.toggle(HIDE_CLASS, !expand));
-            root.querySelectorAll('dd ul').forEach((u) => u.classList.toggle(HIDE_CLASS, !expand));
             target.setAttribute('aria-expanded', expand ? 'true' : 'false');
             return;
         }
@@ -148,21 +152,6 @@ const wireToggles = (root) => {
             while (sibling && sibling.tagName === 'DD') {
                 sibling.classList.toggle(HIDE_CLASS, !open);
                 sibling = sibling.nextElementSibling;
-            }
-            return;
-        }
-
-        if (action === 'grademe-toggle-module') {
-            const dd = target.closest('dd');
-            if (!dd) {
-                return;
-            }
-            const open = !target.classList.contains('open');
-            target.classList.toggle('open', open);
-            target.setAttribute('aria-expanded', open ? 'true' : 'false');
-            const ul = dd.querySelector('ul');
-            if (ul) {
-                ul.classList.toggle(HIDE_CLASS, !open);
             }
         }
     });
@@ -189,7 +178,8 @@ const wireToggles = (root) => {
 };
 
 /**
- * Apply a successful WS response to the matching badges.
+ * Apply a successful WS response to the matching badges and bump the
+ * "Last synced" indicator if this response is fresher than what we have shown.
  *
  * @param {object} response
  */
@@ -212,6 +202,30 @@ const applyCounts = (response) => {
         badge.setAttribute('aria-busy', 'false');
         badge.setAttribute('aria-label', `${count}`);
     });
+
+    const ts = Number(response.lastsynced) || 0;
+    if (ts > latestSync) {
+        latestSync = ts;
+        updateFooter();
+    }
+};
+
+/**
+ * Refresh the "Last synced: {time}" indicator in the block footer.
+ */
+const updateFooter = async () => {
+    const target = document.querySelector('.grademe-lastsynced');
+    if (!target || !latestSync) {
+        return;
+    }
+    const formatted = new Date(latestSync * 1000).toLocaleString();
+    try {
+        const label = await getString('lastsynced', 'block_grade_me', {time: formatted});
+        target.textContent = label;
+    } catch (e) {
+        target.textContent = `Last synced: ${formatted}`;
+    }
+    target.setAttribute('data-lastsynced', String(latestSync));
 };
 
 /**

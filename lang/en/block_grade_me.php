@@ -26,8 +26,8 @@ $string['pluginname'] = 'Grade Me';
 $string['pluginname-reset'] = 'Grade Me - reset table';
 $string['title'] = 'Grade Me';
 $string['datetime'] = '%B %d, %l:%M %p';
-$string['excess'] = 'There are more than {$a->maxcourses} courses with ungraded work.';
-$string['nothing'] = 'Nothing to grade!';
+$string['excess'] = 'More than {$a->maxcourses} courses have ungraded items — showing the first {$a->maxcourses}.';
+$string['nothing'] = 'No ungraded items in your courses.';
 
 $string['link_gradebook_icon'] = 'Go to {$a->course_name} gradebook…';
 $string['link_gradebook'] = 'Go to {$a->course_name}…';
@@ -58,6 +58,9 @@ $string['expand'] = 'Collapse / Expand All';
 $string['badge_loading'] = 'Loading ungraded count…';
 $string['badge_unknown'] = 'Count unavailable';
 $string['ws_get_gradeable_count'] = 'Count and list ungraded items for one module type in a course.';
+$string['staledatanotice'] = 'Counts refresh every 15 minutes.';
+$string['lastsynced'] = 'Last synced: {$a->time}';
+$string['lastsynced_pending'] = 'Last synced: —';
 
 $string['grade_me_tools'] = 'Tools';
 $string['grade_me_tools_desc'] = '<p><a href="{$a}/blocks/grade_me/quiz_update_ngrade.php">Refresh quiz attempts needing grading</a></p>';

@@ -94,14 +94,14 @@ function block_grade_me_build_gradelink(string $moduletype, int $cmid, int $user
             return $CFG->wwwroot . '/mod/quiz/report.php?id=' . $cmid;
         }
         if ($moduletype === 'assign') {
-            return $CFG->wwwroot . '/mod/assign/view.php?id=' . $cmid . '&action=grade';
+            return $CFG->wwwroot . '/mod/assign/view.php?id=' . $cmid . '&action=grading';
         }
         return $CFG->wwwroot . '/mod/' . $moduletype . '/view.php?id=' . $cmid;
     }
 
     switch ($moduletype) {
         case 'assign':
-            return $CFG->wwwroot . '/mod/assign/view.php?id=' . $cmid . '&action=grade&userid=' . $userid;
+            return $CFG->wwwroot . '/mod/assign/view.php?id=' . $cmid . '&action=grading&userid=' . $userid;
         case 'data':
             return $CFG->wwwroot . '/mod/data/view.php?rid=' . $submissionid . '&mode=single';
         case 'forum':
@@ -181,6 +181,7 @@ function block_grade_me_cache_reset() {
     $DB->delete_records('block_grade_me');
     $DB->delete_records('block_grade_me_quiz_ngrade');
     block_grade_me_cache_grade_data();
+    \cache_helper::purge_by_definition('block_grade_me', 'gradeable_count');
     set_config('cachedatalast', time(), 'reset_block');
 }
 // Main cron function.

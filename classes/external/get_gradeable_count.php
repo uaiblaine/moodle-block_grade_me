@@ -82,6 +82,16 @@ class get_gradeable_count extends external_api {
         }
         require_capability($enabled[$moduletype]['capability'], $context);
 
+        // Session cache: per-user, 15-minute TTL (see db/caches.php).
+        $cache = \cache::make('block_grade_me', 'gradeable_count');
+        $cachekey = $courseid . '_' . $moduletype;
+        $hit = $cache->get($cachekey);
+        if (is_array($hit) && isset($hit['payload'], $hit['lastsynced'])) {
+            $payload = $hit['payload'];
+            $payload['lastsynced'] = (int) $hit['lastsynced'];
+            return $payload;
+        }
+
         $course = get_course($courseid);
 
         $useridcolumns = [
@@ -100,20 +110,24 @@ class get_gradeable_count extends external_api {
             $course
         );
 
+        $now = time();
         $empty = [
             'success'     => true,
             'courseid'    => $courseid,
             'moduletype'  => $moduletype,
             'count'       => 0,
             'submissions' => [],
+            'lastsynced'  => $now,
         ];
 
         $fn = 'block_grade_me_query_' . $moduletype;
         if (!function_exists($fn)) {
+            $cache->set($cachekey, ['payload' => $empty, 'lastsynced' => $now]);
             return $empty;
         }
         $pluginfn = $fn($usersql, $userparams);
         if ($pluginfn === false) {
+            $cache->set($cachekey, ['payload' => $empty, 'lastsynced' => $now]);
             return $empty;
         }
         [$sql, $inparams] = $pluginfn;
@@ -154,13 +168,16 @@ class get_gradeable_count extends external_api {
             ];
         }
 
-        return [
+        $payload = [
             'success'     => true,
             'courseid'    => $courseid,
             'moduletype'  => $moduletype,
             'count'       => count($submissions),
             'submissions' => $submissions,
+            'lastsynced'  => $now,
         ];
+        $cache->set($cachekey, ['payload' => $payload, 'lastsynced' => $now]);
+        return $payload;
     }
 
     /**
@@ -185,6 +202,7 @@ class get_gradeable_count extends external_api {
                     'gradelink'      => new external_value(PARAM_URL, 'URL opening the grading screen for this submission'),
                 ])
             ),
+            'lastsynced'  => new external_value(PARAM_INT, 'Unix timestamp of when these counts were computed'),
         ]);
     }
 }

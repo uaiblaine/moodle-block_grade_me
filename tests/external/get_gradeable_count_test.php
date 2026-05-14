@@ -126,15 +126,41 @@ class get_gradeable_count_test extends externallib_advanced_testcase {
         $this->assertSame('assign', $result['moduletype']);
         $this->assertSame(1, $result['count']);
         $this->assertCount(1, $result['submissions']);
+        $this->assertGreaterThan(0, $result['lastsynced']);
 
         $sub = $result['submissions'][0];
         $this->assertSame((int) $s['student']->id, $sub['userid']);
         $this->assertSame($s['cmid'], $sub['coursemoduleid']);
         $this->assertSame('WS test assignment', $sub['itemname']);
         $this->assertStringContainsString(
-            '/mod/assign/view.php?id=' . $s['cmid'] . '&action=grade&userid=' . $s['student']->id,
+            '/mod/assign/view.php?id=' . $s['cmid'] . '&action=grading&userid=' . $s['student']->id,
             $sub['gradelink']
         );
+    }
+
+    /**
+     * The session cache must be populated after the first call, and a second
+     * call must return the same lastsynced timestamp (cache hit).
+     */
+    public function test_session_cache_pins_lastsynced(): void {
+        $this->resetAfterTest(true);
+        $s = $this->create_assign_scenario();
+        $this->setUser($s['teacher']);
+
+        $first = get_gradeable_count::execute($s['course']->id, 'assign');
+        $first = external_api::clean_returnvalue(get_gradeable_count::execute_returns(), $first);
+
+        $cache = \cache::make('block_grade_me', 'gradeable_count');
+        $entry = $cache->get($s['course']->id . '_assign');
+        $this->assertIsArray($entry, 'Cache entry should exist after first call.');
+        $this->assertSame($first['lastsynced'], (int) $entry['lastsynced']);
+
+        $second = get_gradeable_count::execute($s['course']->id, 'assign');
+        $second = external_api::clean_returnvalue(get_gradeable_count::execute_returns(), $second);
+
+        $this->assertSame($first['lastsynced'], $second['lastsynced'],
+            'Second call within TTL should hit the session cache and return the original timestamp.');
+        $this->assertSame($first['count'], $second['count']);
     }
 
     /**

@@ -891,20 +891,21 @@ class grade_me_test extends \advanced_testcase {
     }
 
     /**
-     * The assign per-submission gradelink should target action=grade with the userid.
+     * The assign per-submission gradelink should target action=grading with the userid
+     * so mod_assign jumps to that row inside the grader table.
      */
     public function test_build_gradelink_assign_targets_grader_screen() {
         $url = block_grade_me_build_gradelink('assign', 42, 7, 123);
-        $this->assertStringContainsString('/mod/assign/view.php?id=42&action=grade&userid=7', $url);
+        $this->assertStringContainsString('/mod/assign/view.php?id=42&action=grading&userid=7', $url);
     }
 
     /**
      * The module-level gradelink (submissionid = 0) should target report.php for
-     * quiz and the action=grade overview for assign.
+     * quiz and the grader-table (action=grading) page for assign.
      */
     public function test_build_gradelink_module_level() {
         $this->assertStringContainsString('/mod/quiz/report.php?id=11', block_grade_me_build_gradelink('quiz', 11));
-        $this->assertStringContainsString('/mod/assign/view.php?id=12&action=grade',
+        $this->assertStringContainsString('/mod/assign/view.php?id=12&action=grading',
             block_grade_me_build_gradelink('assign', 12));
         $this->assertStringContainsString('/mod/forum/view.php?id=13', block_grade_me_build_gradelink('forum', 13));
     }
