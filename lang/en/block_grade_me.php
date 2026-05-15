@@ -22,56 +22,48 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['pluginname'] = 'Grade Me';
-$string['pluginname-reset'] = 'Grade Me - reset table';
-$string['title'] = 'Grade Me';
-$string['datetime'] = '%B %d, %l:%M %p';
-$string['excess'] = 'More than {$a->maxcourses} courses have ungraded items — showing the first {$a->maxcourses}.';
-$string['nothing'] = 'No ungraded items in your courses.';
-
-$string['link_gradebook_icon'] = 'Go to {$a->course_name} gradebook…';
-$string['link_gradebook'] = 'Go to {$a->course_name}…';
-$string['link_mod_img'] = 'Go to {$a->mod_name} in gradebook…';
-$string['link_mod'] = 'Go to {$a->mod_name}';
-$string['link_grade_img'] = 'Grade assignment…';
-$string['link_user_profile'] = '{$a->first_name}\'s profile…';
-
 $string['alt_gradebook'] = 'Go to {$a->course_name} gradebook…';
-$string['alt_mod'] = 'Go to {$a->mod_name} in gradebook…';
 $string['alt_mark'] = 'check';
-
-$string['settings_maxcourses'] = 'Maximum Courses Displayed';
-$string['settings_configmaxcourses'] = 'Set the maximum number of ungraded courses to show. Setting this too high may impact performance.';
-$string['settings_maxage'] = 'Maximum Age';
-$string['settings_configmaxage'] = 'The maximum age of gradable items, in days, to show. Items older than this will be hidden. Enter 0 for no limit.';
-$string['settings_adminviewall'] = 'Admins View All';
-$string['settings_configadminviewall'] = 'Enable to give administrators the rights to see all ungraded work — not just for courses where they have a grader role.';
-$string['settings_configshowhidden'] = 'Enable showing items to grade within hidden courses';
-$string['settings_enablepre'] = 'Show';
-$string['settings_configenablepre'] = 'Should Grade Me show unrated activity from the "{$a->plugin_name}" module?';
-$string['settings_showhidden'] = 'Hidden course items shown';
-
-$string['grade_me:addinstance'] = 'Add a new Grade Me block';
-$string['grade_me:myaddinstance'] = 'Add a new Grade Me block to the My Moodle page';
-$string['expand'] = 'Collapse / Expand All';
-
+$string['alt_mod'] = 'Go to {$a->mod_name} in gradebook…';
 $string['badge_loading'] = 'Loading ungraded count…';
 $string['badge_unknown'] = 'Count unavailable';
-$string['ws_get_gradeable_count'] = 'Count and list ungraded items for one module type in a course.';
-$string['staledatanotice'] = 'Counts refresh every 15 minutes.';
-$string['lastsynced'] = 'Last synced: {$a->time}';
-$string['lastsynced_pending'] = 'Last synced: —';
-
+$string['datetime'] = '%B %d, %l:%M %p';
+$string['excess'] = 'More than {$a->maxcourses} courses have ungraded items — showing the first {$a->maxcourses}.';
+$string['expand'] = 'Collapse / Expand All';
+$string['grade_me:addinstance'] = 'Add a new Grade Me block';
+$string['grade_me:myaddinstance'] = 'Add a new Grade Me block to the My Moodle page';
 $string['grade_me_tools'] = 'Tools';
 $string['grade_me_tools_desc'] = '<p><a href="{$a}/blocks/grade_me/quiz_update_ngrade.php">Refresh quiz attempts needing grading</a></p>';
-
+$string['lastsynced'] = 'Last synced: {$a->time}';
+$string['lastsynced_pending'] = 'Last synced: —';
+$string['link_grade_img'] = 'Grade assignment…';
+$string['link_gradebook'] = 'Go to {$a->course_name}…';
+$string['link_gradebook_icon'] = 'Go to {$a->course_name} gradebook…';
+$string['link_mod'] = 'Go to {$a->mod_name}';
+$string['link_mod_img'] = 'Go to {$a->mod_name} in gradebook…';
+$string['link_user_profile'] = '{$a->first_name}\'s profile…';
+$string['nothing'] = 'No ungraded items in your courses.';
+$string['pluginname'] = 'Grade Me';
+$string['pluginname-reset'] = 'Grade Me - reset table';
+$string['privacy:metadata:block_grade_me_quiz_ngrade'] = 'Caches information about quizes needing grades.';
+$string['privacy:metadata:block_grade_me_quiz_ngrade:attemptid'] = 'Attempt id';
+$string['privacy:metadata:block_grade_me_quiz_ngrade:courseid'] = 'Course id';
+$string['privacy:metadata:block_grade_me_quiz_ngrade:questionattemptstepid'] = 'Question Attempt';
+$string['privacy:metadata:block_grade_me_quiz_ngrade:quizid'] = 'Quiz id';
+$string['privacy:metadata:block_grade_me_quiz_ngrade:userid'] = 'User id';
+$string['privacydata'] = 'Grade me';
 $string['quiz_update_ngrade_complete'] = 'Update complete';
 $string['quiz_update_ngrade_success'] = 'Quiz attempt list successfully updated, currently there is {$a} questions needing grading.';
-
-$string['privacy:metadata:block_grade_me_quiz_ngrade'] = 'Caches information about quizes needing grades.';
-$string['privacy:metadata:block_grade_me_quiz_ngrade:userid'] = 'User id';
-$string['privacy:metadata:block_grade_me_quiz_ngrade:quizid'] = 'Quiz id';
-$string['privacy:metadata:block_grade_me_quiz_ngrade:questionattemptstepid'] = 'Question Attempt';
-$string['privacy:metadata:block_grade_me_quiz_ngrade:courseid'] = 'Course id';
-$string['privacy:metadata:block_grade_me_quiz_ngrade:attemptid'] = 'Attempt id';
-$string['privacydata'] = 'Grade me';
+$string['settings_adminviewall'] = 'Admins View All';
+$string['settings_configadminviewall'] = 'Enable to give administrators the rights to see all ungraded work — not just for courses where they have a grader role.';
+$string['settings_configenablepre'] = 'Should Grade Me show unrated activity from the "{$a->plugin_name}" module?';
+$string['settings_configmaxage'] = 'The maximum age of gradable items, in days, to show. Items older than this will be hidden. Enter 0 for no limit.';
+$string['settings_configmaxcourses'] = 'Set the maximum number of ungraded courses to show. Setting this too high may impact performance.';
+$string['settings_configshowhidden'] = 'Enable showing items to grade within hidden courses';
+$string['settings_enablepre'] = 'Show';
+$string['settings_maxage'] = 'Maximum Age';
+$string['settings_maxcourses'] = 'Maximum Courses Displayed';
+$string['settings_showhidden'] = 'Hidden course items shown';
+$string['staledatanotice'] = 'Counts refresh every 15 minutes.';
+$string['title'] = 'Grade Me';
+$string['ws_get_gradeable_count'] = 'Count and list ungraded items for one module type in a course.';
