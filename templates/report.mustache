@@ -1,0 +1,154 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template block_grade_me/report
+
+    Detailed Report page.
+
+    See classes/output/report_page.php for the data shape.
+}}
+<div class="block_grade_me-report"
+     style="font-family:Manrope,system-ui,sans-serif;max-width:1080px;margin:0 auto;padding:16px">
+
+    <nav style="font-size:11px;color:#78716c;margin-bottom:8px">
+        <a href="{{breadcrumb_back_url}}" style="color:#78716c">&larr; {{breadcrumb_back}}</a>
+        <span> / </span>
+        <span style="color:#1c1917;font-weight:600">{{title}}</span>
+    </nav>
+
+    <header style="margin-bottom:16px">
+        <div style="font-size:10px;font-weight:600;color:#a8a29e;text-transform:uppercase;letter-spacing:0.5px">
+            {{coursename}}
+        </div>
+        <h1 style="font-size:24px;font-weight:800;margin:2px 0 0 0;color:#1c1917">
+            {{groupname}}
+        </h1>
+    </header>
+
+    <section style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">
+        {{#hero_metrics}}
+        <div style="border:1px solid #e7e5e4;border-radius:10px;padding:10px 12px;background:#fff">
+            <div style="font-size:10px;font-weight:600;color:#78716c;text-transform:uppercase;letter-spacing:0.4px">{{label}}</div>
+            <div style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:22px;font-weight:700;font-feature-settings:'tnum';color:#1c1917">{{value}}</div>
+            {{#extra}}<div style="margin-top:4px">{{{extra}}}</div>{{/extra}}
+        </div>
+        {{/hero_metrics}}
+    </section>
+
+    <section style="margin-bottom:14px">
+        <div style="display:flex;height:10px;border-radius:5px;overflow:hidden;border:1px solid #e7e5e4">
+            {{#distribution}}
+            <a href="#" data-distribution-bucket="{{bucket}}"
+               style="flex:{{pct}};background:{{color}};display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:600;text-decoration:none"
+               title="{{label}}: {{count}}">
+                {{#count}}{{count}}{{/count}}
+            </a>
+            {{/distribution}}
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:9.5px;color:#78716c;font-family:'JetBrains Mono',monospace">
+            {{#distribution}}
+            <span style="color:{{color}};font-weight:600">{{label}}</span>
+            {{/distribution}}
+        </div>
+    </section>
+
+    <section style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <div role="tablist" class="btn-group btn-group-sm">
+            {{#filter_links}}
+            <a href="{{url}}" role="tab"
+               class="btn btn-sm {{#selected}}btn-primary{{/selected}}{{^selected}}btn-outline-secondary{{/selected}}"
+               aria-selected="{{#selected}}true{{/selected}}{{^selected}}false{{/selected}}">{{label}}</a>
+            {{/filter_links}}
+        </div>
+        <form method="get" action="{{sort_url}}" style="display:flex;align-items:center;gap:6px;margin-left:auto">
+            {{#sort_state}}<input type="hidden" name="{{name}}" value="{{value}}">{{/sort_state}}
+            <label for="grademe-report-sort" style="font-size:11px;color:#57534e">
+                {{#str}}dashboard_sort_label, block_grade_me{{/str}}
+            </label>
+            <select id="grademe-report-sort" name="sort" class="form-select form-select-sm">
+                {{#sort_options}}
+                <option value="{{value}}" {{#selected}}selected{{/selected}}>{{label}}</option>
+                {{/sort_options}}
+            </select>
+            <noscript><button type="submit" class="btn btn-sm btn-secondary">
+                {{#str}}dashboard_sort_apply, block_grade_me{{/str}}
+            </button></noscript>
+        </form>
+    </section>
+
+    <section style="border:1px solid #e7e5e4;border-radius:10px;overflow:hidden;background:#fff">
+        <table class="table table-sm" style="margin:0">
+            <thead>
+                <tr>
+                    <th>{{#str}}report_col_student, block_grade_me{{/str}}</th>
+                    <th>{{#str}}report_col_activity, block_grade_me{{/str}}</th>
+                    <th>{{#str}}report_col_submitted, block_grade_me{{/str}}</th>
+                    <th>{{#str}}report_col_waiting, block_grade_me{{/str}}</th>
+                    <th>{{#str}}dashboard_col_sla, block_grade_me{{/str}}</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#rows}}
+                <tr>
+                    <td>
+                        <span style="display:inline-flex;align-items:center;gap:6px">
+                            {{{avatar}}}
+                            <span>{{studentname}}</span>
+                            {{#has_user_override}}
+                            <span title="{{override_tooltip}}"
+                                  style="font-size:9px;font-weight:600;padding:1px 5px;border-radius:3px;background:#fef3c7;color:#92400e;text-transform:uppercase;letter-spacing:0.3px">
+                                {{override_label}}
+                            </span>
+                            {{/has_user_override}}
+                        </span>
+                    </td>
+                    <td>{{activityname}}</td>
+                    <td style="font-family:'JetBrains Mono',monospace;font-feature-settings:'tnum'">{{submitted}}</td>
+                    <td style="font-family:'JetBrains Mono',monospace;color:{{bucket_color}};font-weight:700;font-feature-settings:'tnum'">{{waiting_hours}}</td>
+                    <td style="min-width:140px">{{{sla_bar}}}</td>
+                    <td>
+                        <a href="{{gradelink}}" class="btn btn-sm btn-primary">
+                            {{#str}}report_grade_button, block_grade_me{{/str}}
+                        </a>
+                    </td>
+                </tr>
+                {{/rows}}
+                {{^has_rows}}
+                <tr><td colspan="6" class="text-center text-muted">{{#str}}report_empty, block_grade_me{{/str}}</td></tr>
+                {{/has_rows}}
+            </tbody>
+        </table>
+    </section>
+
+    {{#has_pagination}}
+    <nav style="margin-top:10px">
+        <ul class="pagination pagination-sm">
+            {{#pages}}
+            <li class="page-item {{#selected}}active{{/selected}}">
+                <a class="page-link" href="{{url}}">{{index}}</a>
+            </li>
+            {{/pages}}
+        </ul>
+    </nav>
+    {{/has_pagination}}
+</div>
+{{#js}}
+require(['block_grade_me/report'], function(report) {
+    report.init();
+});
+{{/js}}

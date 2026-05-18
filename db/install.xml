@@ -49,5 +49,109 @@
         <INDEX NAME="idx_userid_quizid" UNIQUE="false" FIELDS="userid, quizid"/>
       </INDEXES>
     </TABLE>
+    <TABLE NAME="block_grade_me_sla_sub" COMMENT="Per-submission SLA ledger; one row per (cmid, userid, attemptnumber).">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true"/>
+        <FIELD NAME="groupid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0"/>
+        <FIELD NAME="cmid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true"/>
+        <FIELD NAME="modtype" TYPE="char" LENGTH="20" NOTNULL="true"/>
+        <FIELD NAME="iteminstance" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true"/>
+        <FIELD NAME="attemptnumber" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="submissionstatus" TYPE="char" LENGTH="20" NOTNULL="true"/>
+        <FIELD NAME="timesubmitted" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0"/>
+        <FIELD NAME="timegraded" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true"/>
+        <FIELD NAME="waitinghours" TYPE="number" LENGTH="10" DECIMALS="2" NOTNULL="false"/>
+        <FIELD NAME="hasrule" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0"/>
+        <FIELD NAME="timeopens" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true"/>
+        <FIELD NAME="timecloses" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="uq_cm_user_attempt" UNIQUE="true" FIELDS="cmid, userid, attemptnumber"/>
+        <INDEX NAME="idx_course_group_graded" UNIQUE="false" FIELDS="courseid, groupid, timegraded"/>
+        <INDEX NAME="idx_course_group_submitted" UNIQUE="false" FIELDS="courseid, groupid, timesubmitted"/>
+        <INDEX NAME="idx_timesubmitted" UNIQUE="false" FIELDS="timesubmitted"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="block_grade_me_sla_group" COMMENT="Current SLA rollup; one row per (courseid, groupid, modtype).">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true"/>
+        <FIELD NAME="groupid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0"/>
+        <FIELD NAME="modtype" TYPE="char" LENGTH="20" NOTNULL="true"/>
+        <FIELD NAME="pending" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0"/>
+        <FIELD NAME="critical" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0"/>
+        <FIELD NAME="overgoal" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0"/>
+        <FIELD NAME="medianh" TYPE="number" LENGTH="10" DECIMALS="2" NOTNULL="false"/>
+        <FIELD NAME="p90h" TYPE="number" LENGTH="10" DECIMALS="2" NOTNULL="false"/>
+        <FIELD NAME="maxh" TYPE="number" LENGTH="10" DECIMALS="2" NOTNULL="false"/>
+        <FIELD NAME="timerecomputed" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="uq_course_group_modtype" UNIQUE="true" FIELDS="courseid, groupid, modtype"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="block_grade_me_sla_trend" COMMENT="Per-day SLA medians for the 30-day sparkline.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true"/>
+        <FIELD NAME="groupid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0"/>
+        <FIELD NAME="modtype" TYPE="char" LENGTH="20" NOTNULL="true"/>
+        <FIELD NAME="day" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true"/>
+        <FIELD NAME="medianh" TYPE="number" LENGTH="10" DECIMALS="2" NOTNULL="false"/>
+        <FIELD NAME="numgraded" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="uq_course_group_modtype_day" UNIQUE="true" FIELDS="courseid, groupid, modtype, day"/>
+        <INDEX NAME="idx_day" UNIQUE="false" FIELDS="day"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="block_grade_me_sla_site" COMMENT="Site-wide SLA stats per modtype per day for the school comparison.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true"/>
+        <FIELD NAME="modtype" TYPE="char" LENGTH="20" NOTNULL="true"/>
+        <FIELD NAME="day" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true"/>
+        <FIELD NAME="medianh" TYPE="number" LENGTH="10" DECIMALS="2" NOTNULL="false"/>
+        <FIELD NAME="p10h" TYPE="number" LENGTH="10" DECIMALS="2" NOTNULL="false"/>
+        <FIELD NAME="numgraded" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="uq_modtype_day" UNIQUE="true" FIELDS="modtype, day"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="block_grade_me_sla_queue" COMMENT="Dirty queue of (courseid, groupid, modtype) tuples awaiting recompute.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true"/>
+        <FIELD NAME="groupid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0"/>
+        <FIELD NAME="modtype" TYPE="char" LENGTH="20" NOTNULL="true"/>
+        <FIELD NAME="timeenqueued" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="uq_course_group_modtype" UNIQUE="true" FIELDS="courseid, groupid, modtype"/>
+        <INDEX NAME="idx_timeenqueued" UNIQUE="false" FIELDS="timeenqueued"/>
+      </INDEXES>
+    </TABLE>
   </TABLES>
 </XMLDB>

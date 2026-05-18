@@ -182,7 +182,7 @@ function block_grade_me_cache_reset() {
     $DB->delete_records('block_grade_me_quiz_ngrade');
     block_grade_me_cache_grade_data();
     \cache_helper::purge_by_definition('block_grade_me', 'gradeable_count');
-    set_config('cachedatalast', time(), 'reset_block');
+    set_config('cachedatalast', time(), 'block_grade_me');
 }
 // Main cron function.
 /**
@@ -316,4 +316,121 @@ function block_grade_me_cache_grade_data() {
 
     set_config('cachedatalast', time(), 'block_grade_me');
     return true;
+}
+
+/**
+ * Strings used by the responsiveness AMD module. Embedded in the skeleton's
+ * JSON envelope so the JS does not need a separate core/str round-trip.
+ *
+ * @return string[]
+ */
+function block_grade_me_responsiveness_strings(): array {
+    $keys = [
+        'responsiveness',
+        'typical_response',
+        'within_90',
+        'longest_wait',
+        'school_median',
+        'top_10',
+        'pending',
+        'critical',
+        'no_rule',
+        'rule',
+        'bucket_excellent',
+        'bucket_good',
+        'bucket_regular',
+        'bucket_critical',
+        'open_dashboard',
+        'last_30_days',
+        'compare_you',
+        'compare_top10',
+        'activities_open_close',
+        'responsiveness_loading',
+        'responsiveness_no_groups',
+        'responsiveness_load_failed',
+    ];
+    $out = [];
+    foreach ($keys as $key) {
+        $out[$key] = get_string($key, 'block_grade_me');
+    }
+    return $out;
+}
+
+/**
+ * Build the JSON envelope embedded in the responsiveness skeleton.
+ *
+ * @param int $courseid
+ * @return string JSON, safe for inline inclusion via {{{datajson}}}
+ */
+function block_grade_me_responsiveness_envelope(int $courseid): string {
+    $payload = [
+        'courseid' => $courseid,
+        'strings'  => block_grade_me_responsiveness_strings(),
+    ];
+    return json_encode($payload, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+}
+
+/**
+ * Re-enqueue every existing (course, group, modtype) tuple so the next
+ * sla_drain run recomputes their rollup. Called from
+ * `set_updatedcallback` on admin settings whose value affects rollup math
+ * (maxage, sla_thresholds, sla_goal).
+ *
+ * Also purges the responsiveness WS cache so the block picks up the new
+ * numbers without waiting for the 15-minute TTL.
+ */
+function block_grade_me_invalidate_rollups(): void {
+    global $DB;
+
+    // When hidden courses are not allowed to contribute, sweep any straggler
+    // ledger / rollup / trend / queue rows for courses that are currently
+    // hidden. This makes the setting actually mean "no calculation" rather
+    // than "filtered at render time only".
+    if (!\block_grade_me\local\sla\bucket::include_hidden_courses()) {
+        block_grade_me_purge_hidden_course_data();
+    }
+
+    $rs = $DB->get_recordset_sql(
+        'SELECT DISTINCT courseid, groupid, modtype FROM {block_grade_me_sla_group}'
+    );
+    foreach ($rs as $row) {
+        \block_grade_me\local\sla\dirty_queue::enqueue(
+            (int) $row->courseid,
+            (int) $row->groupid,
+            (string) $row->modtype
+        );
+    }
+    $rs->close();
+
+    // Both WS caches need to drop: gradeable_count drives the legacy activity
+    // list (affected by maxage / enableshowhidden / enableadminviewall);
+    // responsiveness_payload drives the SLA section (affected by all of the
+    // above plus the SLA-specific thresholds and goal).
+    \cache_helper::purge_by_definition('block_grade_me', 'responsiveness_payload');
+    \cache_helper::purge_by_definition('block_grade_me', 'gradeable_count');
+}
+
+/**
+ * Delete every SLA row (ledger, rollup, trend, queue) belonging to a course
+ * whose `visible` flag is 0. Idempotent and cheap when no hidden-course data
+ * exists. Used by {@see block_grade_me_invalidate_rollups()} whenever the
+ * `enableshowhidden` setting is off so the data side stays in sync with the
+ * display side.
+ */
+function block_grade_me_purge_hidden_course_data(): void {
+    global $DB;
+    $courseids = $DB->get_fieldset_sql(
+        "SELECT DISTINCT sub.courseid
+           FROM {block_grade_me_sla_sub} sub
+           JOIN {course} c ON c.id = sub.courseid
+          WHERE c.visible = 0"
+    );
+    if (empty($courseids)) {
+        return;
+    }
+    [$insql, $params] = $DB->get_in_or_equal($courseids, SQL_PARAMS_NAMED);
+    $DB->delete_records_select('block_grade_me_sla_sub',   "courseid $insql", $params);
+    $DB->delete_records_select('block_grade_me_sla_group', "courseid $insql", $params);
+    $DB->delete_records_select('block_grade_me_sla_trend', "courseid $insql", $params);
+    $DB->delete_records_select('block_grade_me_sla_queue', "courseid $insql", $params);
 }

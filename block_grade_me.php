@@ -115,6 +115,7 @@ class block_grade_me extends block_base {
                 . ' <span class="grademe-lastsynced" data-lastsynced="0">'
                 . s(get_string('lastsynced_pending', 'block_grade_me'))
                 . '</span></small>';
+            $this->content->text .= $this->responsiveness_markup($COURSE);
             return $this->content;
         }
 
@@ -131,8 +132,44 @@ class block_grade_me extends block_base {
                 break;
             }
         }
+        $this->content->text .= $this->responsiveness_markup($COURSE);
 
         return $this->content;
+    }
+
+    /**
+     * Build the responsiveness skeleton markup, or '' when the section should
+     * not appear for this user/course (siteid context, disabled by admin, or
+     * capability missing).
+     *
+     * @param stdClass $course
+     * @return string
+     */
+    protected function responsiveness_markup($course): string {
+        global $OUTPUT;
+        if (empty($course) || (int) $course->id === SITEID) {
+            return '';
+        }
+        $show = get_config(null, 'block_grade_me_show_responsiveness');
+        if ($show !== false && (int) $show === 0) {
+            return '';
+        }
+        // Mirror the existing `enableshowhidden` semantic: hide the section on
+        // a course that has been hidden from students unless the admin opted in.
+        if (empty($course->visible)
+            && !\block_grade_me\local\sla\bucket::include_hidden_courses()) {
+            return '';
+        }
+        $context = context_course::instance($course->id);
+        if (!has_capability('block/grade_me:viewresponsiveness', $context)) {
+            return '';
+        }
+        $dashboardurl = new moodle_url('/blocks/grade_me/dashboard.php');
+        return $OUTPUT->render_from_template('block_grade_me/block_responsiveness_skeleton', [
+            'courseid'     => (int) $course->id,
+            'datajson'     => block_grade_me_responsiveness_envelope((int) $course->id),
+            'dashboardurl' => $dashboardurl->out(false),
+        ]);
     }
 
     /**

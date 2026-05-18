@@ -1,0 +1,141 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template block_grade_me/dashboard
+
+    Teacher Dashboard page: greeting, mini-stats, prioritised cards, course table.
+
+    See classes/output/dashboard_page.php for the data shape.
+}}
+<div class="block_grade_me-dashboard"
+     style="font-family:Manrope,system-ui,sans-serif;max-width:1080px;margin:0 auto;padding:16px">
+
+    <header style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:16px">
+        <div>
+            <div style="font-size:10px;font-weight:600;color:#a8a29e;text-transform:uppercase;letter-spacing:0.5px">
+                {{pluginname}}
+            </div>
+            <h1 style="font-size:24px;font-weight:800;margin:2px 0 4px 0;color:#1c1917">
+                {{greeting}}
+            </h1>
+            <div style="font-size:12px;color:#57534e">{{subtitle}}</div>
+        </div>
+        <form method="get" action="{{sort_url}}" style="display:flex;align-items:center;gap:8px">
+            <label for="grademe-dashboard-sort" style="font-size:11px;color:#57534e">
+                {{#str}}dashboard_sort_label, block_grade_me{{/str}}
+            </label>
+            <select id="grademe-dashboard-sort" name="sort" class="form-select form-select-sm">
+                {{#sort_options}}
+                <option value="{{value}}" {{#selected}}selected{{/selected}}>{{label}}</option>
+                {{/sort_options}}
+            </select>
+            <noscript><button type="submit" class="btn btn-sm btn-secondary">
+                {{#str}}dashboard_sort_apply, block_grade_me{{/str}}
+            </button></noscript>
+        </form>
+    </header>
+
+    <section style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px">
+        {{#mini_stats}}
+        <div style="border:1px solid #e7e5e4;border-radius:10px;padding:10px 12px;background:#fff">
+            <div style="font-size:10px;font-weight:600;color:#78716c;text-transform:uppercase;letter-spacing:0.4px">{{label}}</div>
+            <div style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:22px;font-weight:700;font-feature-settings:'tnum';color:#1c1917">{{value}}</div>
+        </div>
+        {{/mini_stats}}
+    </section>
+
+    {{#has_priority}}
+    <section style="margin-bottom:18px">
+        <h2 style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#1c1917;margin:0 0 8px 0">
+            {{#str}}dashboard_grade_now, block_grade_me{{/str}}
+        </h2>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+            {{#priority_cards}}
+            <article style="border:1px solid #e7e5e4;border-radius:10px;padding:12px;background:#fff;display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;align-items:center;gap:8px">
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:#a8a29e;width:18px">#{{rank}}</span>
+                    <span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:{{bucket_color}}1f;color:{{bucket_color}}">{{bucket_label}}</span>
+                </div>
+                <h3 style="font-size:13px;font-weight:700;margin:0;color:#1c1917;line-height:1.3">{{activityname}}</h3>
+                <div style="font-size:10px;color:#78716c">{{coursename}}</div>
+                <div style="display:flex;align-items:center;gap:8px">
+                    {{{avatar}}}
+                    <span style="font-size:11px;color:#1c1917">{{studentname}}</span>
+                </div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:{{bucket_color}};font-feature-settings:'tnum'">{{waiting_hours}}</div>
+                <div>{{{sla_bar}}}</div>
+                {{#closes_label}}<div style="font-size:10px;color:#b91c1c;font-weight:600">{{closes_label}}</div>{{/closes_label}}
+                <a href="{{gradelink}}" class="btn btn-sm btn-primary" style="align-self:flex-start">
+                    {{#str}}dashboard_open_submission, block_grade_me{{/str}}
+                </a>
+            </article>
+            {{/priority_cards}}
+        </div>
+    </section>
+    {{/has_priority}}
+
+    {{#has_courses}}
+    <section>
+        <h2 style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#1c1917;margin:0 0 8px 0">
+            {{#str}}dashboard_courses_header, block_grade_me{{/str}}
+        </h2>
+        <div style="border:1px solid #e7e5e4;border-radius:10px;overflow:hidden;background:#fff">
+            <table class="table table-sm" style="margin:0">
+                <thead>
+                    <tr>
+                        <th>{{#str}}dashboard_col_course, block_grade_me{{/str}}</th>
+                        <th class="text-end">{{#str}}pending, block_grade_me{{/str}}</th>
+                        <th class="text-end">{{#str}}critical, block_grade_me{{/str}}</th>
+                        <th>{{#str}}dashboard_col_median, block_grade_me{{/str}}</th>
+                        <th>{{#str}}dashboard_col_trend, block_grade_me{{/str}}</th>
+                        <th>{{#str}}dashboard_col_sla, block_grade_me{{/str}}</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                {{#courses}}
+                    <tr>
+                        <td>
+                            <a href="{{courseurl}}" style="color:#1c1917;text-decoration:none;font-weight:600">{{coursename}}</a>
+                        </td>
+                        <td class="text-end" style="font-family:'JetBrains Mono',monospace;font-feature-settings:'tnum'">{{pending}}</td>
+                        <td class="text-end" style="font-family:'JetBrains Mono',monospace;font-feature-settings:'tnum';color:{{#critical}}#b91c1c{{/critical}}{{^critical}}#78716c{{/critical}};font-weight:{{#critical}}700{{/critical}}">{{critical}}</td>
+                        <td style="font-family:'JetBrains Mono',monospace;color:{{bucket_color}};font-weight:700;font-feature-settings:'tnum'">{{median_h}}</td>
+                        <td>{{{sparkline}}}</td>
+                        <td style="min-width:120px">{{{sla_bar}}}</td>
+                        <td>
+                            <a href="{{courseurl}}" class="btn btn-sm btn-outline-secondary">
+                                {{#str}}dashboard_open_course, block_grade_me{{/str}}
+                            </a>
+                        </td>
+                    </tr>
+                {{/courses}}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    {{/has_courses}}
+
+    {{^has_courses}}
+    <div class="alert alert-info">{{#str}}dashboard_empty, block_grade_me{{/str}}</div>
+    {{/has_courses}}
+</div>
+{{#js}}
+require(['block_grade_me/dashboard'], function(dashboard) {
+    dashboard.init();
+});
+{{/js}}

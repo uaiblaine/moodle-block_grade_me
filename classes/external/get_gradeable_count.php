@@ -82,9 +82,11 @@ class get_gradeable_count extends external_api {
         }
         require_capability($enabled[$moduletype]['capability'], $context);
 
-        // Session cache: per-user, 15-minute TTL (see db/caches.php).
+        // Session cache: per-user, 15-minute TTL (see db/caches.php). The user
+        // id is part of the key so admins / multi-user dev sessions don't
+        // share each other's response payloads.
         $cache = \cache::make('block_grade_me', 'gradeable_count');
-        $cachekey = $courseid . '_' . $moduletype;
+        $cachekey = $USER->id . '_' . $courseid . '_' . $moduletype;
         $hit = $cache->get($cachekey);
         if (is_array($hit) && isset($hit['payload'], $hit['lastsynced'])) {
             $payload = $hit['payload'];

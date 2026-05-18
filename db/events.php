@@ -57,4 +57,56 @@ $observers = [
         'callback' => '\block_grade_me\quiz_observers::question_manually_graded',
         'internal' => false,
     ],
+
+    // Grading Responsiveness (SLA) observers — see classes/local/sla/observer.php.
+    [
+        'eventname' => '\mod_assign\event\assessable_submitted',
+        'callback'  => '\block_grade_me\local\sla\observer::submission_changed',
+        'internal'  => false,
+    ],
+    [
+        'eventname' => '\assignsubmission_onlinetext\event\submission_created',
+        'callback'  => '\block_grade_me\local\sla\observer::submission_changed',
+        'internal'  => false,
+    ],
+    [
+        'eventname' => '\assignsubmission_file\event\submission_created',
+        'callback'  => '\block_grade_me\local\sla\observer::submission_changed',
+        'internal'  => false,
+    ],
+    [
+        'eventname' => '\mod_assign\event\submission_status_updated',
+        'callback'  => '\block_grade_me\local\sla\observer::submission_changed',
+        'internal'  => false,
+    ],
+    [
+        'eventname' => '\mod_assign\event\submission_graded',
+        'callback'  => '\block_grade_me\local\sla\observer::submission_graded',
+        'internal'  => false,
+    ],
+    [
+        'eventname' => '\mod_assign\event\group_override_created',
+        'callback'  => '\block_grade_me\local\sla\observer::override_changed',
+        'internal'  => false,
+    ],
+    [
+        'eventname' => '\mod_assign\event\group_override_updated',
+        'callback'  => '\block_grade_me\local\sla\observer::override_changed',
+        'internal'  => false,
+    ],
+    [
+        'eventname' => '\mod_assign\event\group_override_deleted',
+        'callback'  => '\block_grade_me\local\sla\observer::override_changed',
+        'internal'  => false,
+    ],
+    [
+        'eventname' => '\core\event\course_module_deleted',
+        'callback'  => '\block_grade_me\local\sla\observer::course_module_deleted',
+        'internal'  => false,
+    ],
+    [
+        'eventname' => '\core\event\course_deleted',
+        'callback'  => '\block_grade_me\local\sla\observer::course_deleted',
+        'internal'  => false,
+    ],
 ];

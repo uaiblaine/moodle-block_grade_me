@@ -1,0 +1,70 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template block_grade_me/block_responsiveness_skeleton
+
+    Wrapper for the Grading Responsiveness section appended to the block. The
+    section is empty on first paint; amd/src/responsiveness.js reads the JSON
+    payload embedded in the <script> tag, calls
+    block_grade_me_get_responsiveness, and composes one card per teacher group.
+
+    Context variables required for this template:
+    * courseid     int   The current course id
+    * datajson     string JSON-encoded payload: { courseid, strings }
+    * dashboardurl string Absolute URL of /blocks/grade_me/dashboard.php
+
+    Example context (json):
+    {
+        "courseid": 42,
+        "datajson": "{\"courseid\":42}",
+        "dashboardurl": "https://example.com/blocks/grade_me/dashboard.php"
+    }
+}}
+<section id="grademe-responsiveness"
+         class="block_grade_me-responsiveness"
+         data-courseid="{{courseid}}"
+         aria-busy="true"
+         style="margin-top:14px;font-family:Manrope,system-ui,sans-serif">
+    <div class="grademe-responsiveness-header"
+         style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">
+        <h6 class="grademe-responsiveness-title"
+            style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#1c1917;margin:0">
+            {{#str}}responsiveness, block_grade_me{{/str}}
+        </h6>
+        <a class="btn btn-link btn-sm grademe-open-dashboard"
+           href="{{dashboardurl}}"
+           style="font-size:11px;padding:2px 6px">
+            {{#str}}open_dashboard, block_grade_me{{/str}}
+        </a>
+    </div>
+    <div class="grademe-responsiveness-body" aria-live="polite" style="min-height:32px">
+        <div class="text-muted small">{{#str}}responsiveness_loading, block_grade_me{{/str}}</div>
+    </div>
+    <script type="application/json" id="grademe-responsiveness-data">{{{datajson}}}</script>
+</section>
+{{#js}}
+require(['block_grade_me/responsiveness'], function(responsiveness) {
+    var el = document.getElementById('grademe-responsiveness-data');
+    if (el) {
+        try {
+            responsiveness.init(JSON.parse(el.textContent));
+        } catch (e) {
+            window.console && window.console.error('block_grade_me: responsiveness init failed', e);
+        }
+    }
+});
+{{/js}}

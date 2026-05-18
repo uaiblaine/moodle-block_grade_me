@@ -24,10 +24,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2026051401;
+$plugin->version = 2026051801;
 $plugin->requires = 2022112800;
 $plugin->cron = 3600;
 $plugin->component = 'block_grade_me';
 $plugin->maturity = MATURITY_STABLE;
 $plugin->supported = [405, 502];
-$plugin->release = '4.4.0.1';
+$plugin->release = '4.5.0.1';

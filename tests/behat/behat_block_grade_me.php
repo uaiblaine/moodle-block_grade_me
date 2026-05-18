@@ -65,4 +65,19 @@ class behat_block_grade_me extends behat_base {
         $field = behat_field_manager::get_form_field($fieldnode, $this->getSession());
         $field->set_value($value);
     }
+
+    /**
+     * Visit the Detailed Report page for a group identified by its idnumber.
+     *
+     * The report page expects a numeric group id; this step resolves it on the
+     * fly so feature files can refer to the group by its readable idnumber.
+     *
+     * @When /^I visit the responsiveness report for group "(?P<idnumber_string>(?:[^"]|\\")*)"$/
+     * @param string $idnumber
+     */
+    public function i_visit_the_responsiveness_report_for_group($idnumber) {
+        global $DB;
+        $groupid = (int) $DB->get_field('groups', 'id', ['idnumber' => $idnumber], MUST_EXIST);
+        $this->execute('behat_general::i_visit', ['/blocks/grade_me/report.php?group=' . $groupid]);
+    }
 }

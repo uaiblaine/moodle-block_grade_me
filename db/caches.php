@@ -33,4 +33,12 @@ $definitions = [
         'ttl'                => 900,
         'staticacceleration' => true,
     ],
+    // Per-user, per-course Grading Responsiveness WS payload. Same 15-minute
+    // TTL as gradeable_count so the two refresh in lockstep.
+    'responsiveness_payload' => [
+        'mode'               => cache_store::MODE_SESSION,
+        'simpledata'         => false,
+        'ttl'                => 900,
+        'staticacceleration' => true,
+    ],
 ];

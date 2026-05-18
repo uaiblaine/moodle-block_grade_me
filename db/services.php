@@ -33,4 +33,12 @@ $functions = [
         'ajax'         => true,
         'capabilities' => 'mod/assign:grade,mod/quiz:grade,mod/forum:rate,mod/glossary:rate,mod/data:rate,mod/lesson:grade',
     ],
+    'block_grade_me_get_responsiveness' => [
+        'classname'    => 'block_grade_me\\external\\get_responsiveness',
+        'methodname'   => 'execute',
+        'description'  => 'Per-group Grading Responsiveness payload for one course.',
+        'type'         => 'read',
+        'ajax'         => true,
+        'capabilities' => 'block/grade_me:viewresponsiveness',
+    ],
 ];

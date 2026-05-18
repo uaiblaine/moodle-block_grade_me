@@ -42,4 +42,45 @@ $tasks = [
         'dayofweek' => '*',
         'month' => '*',
     ],
+    // SLA drain — recompute group rollups for every dirty tuple, every 5 min.
+    [
+        'classname' => 'block_grade_me\task\sla_drain',
+        'blocking'  => 0,
+        'minute'    => '*/5',
+        'hour'      => '*',
+        'day'       => '*',
+        'dayofweek' => '*',
+        'month'     => '*',
+    ],
+    // SLA trend rebuild — yesterday's daily medians, once at 03:00.
+    [
+        'classname' => 'block_grade_me\task\sla_trend_recompute',
+        'blocking'  => 0,
+        'minute'    => '0',
+        'hour'      => '3',
+        'day'       => '*',
+        'dayofweek' => '*',
+        'month'     => '*',
+    ],
+    // SLA site stats — site-wide median + top-10% for yesterday, at 03:30.
+    [
+        'classname' => 'block_grade_me\task\sla_site_stats',
+        'blocking'  => 0,
+        'minute'    => '30',
+        'hour'      => '3',
+        'day'       => '*',
+        'dayofweek' => '*',
+        'month'     => '*',
+    ],
+    // SLA backfill — chunked walk of assign_submission, no-op unless activated
+    // by the reset action. Runs every 5 min while active.
+    [
+        'classname' => 'block_grade_me\task\sla_backfill',
+        'blocking'  => 0,
+        'minute'    => '*/5',
+        'hour'      => '*',
+        'day'       => '*',
+        'dayofweek' => '*',
+        'month'     => '*',
+    ],
 ];

@@ -235,5 +235,52 @@ function xmldb_block_grade_me_upgrade($oldversion, $block) {
         upgrade_block_savepoint(true, 2026040305, 'grade_me');
     }
 
+    if ($oldversion < 2026051701) {
+        // Install the SLA ledger / rollup / trend / site / queue tables for the
+        // Grading Responsiveness section.
+        upgrade_set_timeout(3600);
+
+        $slatables = [
+            'block_grade_me_sla_sub',
+            'block_grade_me_sla_group',
+            'block_grade_me_sla_trend',
+            'block_grade_me_sla_site',
+            'block_grade_me_sla_queue',
+        ];
+
+        foreach ($slatables as $tablename) {
+            if (!$dbman->table_exists($tablename)) {
+                $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', $tablename);
+            }
+        }
+
+        upgrade_block_savepoint(true, 2026051701, 'grade_me');
+    }
+
+    if ($oldversion < 2026051801) {
+        // SLA admin settings migrate from {config} (no-slash) to {config_plugins}
+        // (slash form). Project decision: drop the legacy values and let
+        // defaults apply — admins re-enter any customised values from the UI.
+        $legacysettings = [
+            'block_grade_me_sla_thresholds',
+            'block_grade_me_sla_goal',
+            'block_grade_me_sla_drain_batch',
+            'block_grade_me_sla_backfill_chunk',
+            'block_grade_me_report_pagesize',
+            'block_grade_me_show_school_comparison',
+            'block_grade_me_variant',
+        ];
+        foreach ($legacysettings as $legacyname) {
+            unset_config($legacyname);
+        }
+
+        // Auto-activate the SLA backfill so the first cron tick after upgrade
+        // kicks off the ledger build without the admin having to hit Reset.
+        set_config('sla_backfill_active', 1, 'block_grade_me');
+        set_config('sla_backfill_cursor', 0, 'block_grade_me');
+
+        upgrade_block_savepoint(true, 2026051801, 'grade_me');
+    }
+
     return true;
 }
